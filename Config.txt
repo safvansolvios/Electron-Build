@@ -1,0 +1,1 @@
+{"connection":[{"name":"con1","value":"this con1"},{"name":"con2","value":"this con1"},{"name":"con3","value":"this con1"},{"name":"con5","value":"con6 New"},{"name":"con6","value":"con6 New"}],"PinPadIp":"192.168.1.32","PinPadPort":"10009","SerialNumber":"14141"}

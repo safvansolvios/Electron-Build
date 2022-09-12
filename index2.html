@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Web site created using create-react-app" />
+    <link rel="apple-touch-icon" href="./logo192.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>React App</title>
+    <script></script>
+    <script>
+        
+        var jQuery = $ = require("jquery"); 
+        require("electron-virtual-keyboard/client")(window, jQuery);
+         $(document).ready(function()
+         {
+            $('body').on('click', '.key-board', function(e) 
+            {
+                window.Portal.config.LoadKeyBoard();
+                $(e.target).focus();
+            });
+        });
+         (function () {
+         var GlobalFun = {
+            LoadKeyBoard: function () 
+            {
+              var keyboard = $('.key-board').keyboard({ theme:"theme-mac", layout:'us-en:mobile'})
+            }        
+        };
+    window.Portal = 
+    {
+        config : GlobalFun
+    };    
+})();
+    </script>
+    <script defer="defer" src="./static/js/main.973f9d1f.js"></script>
+    <link href="./static/css/main.b48844a1.css" rel="stylesheet">
+</head>
+
+<body><noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+
+</html>
