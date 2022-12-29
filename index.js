@@ -5,17 +5,18 @@ const { setupTitlebar} = require('custom-electron-titlebar/main');
 const VirtualKeyboard = require('electron-virtual-keyboard');
 const {GetAllConnection ,SetConnection,SetPinPad,GetPinpadSetting} = require('./Config/Connection');
 const Updater = require('./Config/Update');
-const {store} = require('./Config/Store');
-const Config = require('./Config');
+// const {store} = require('./Config/Store');
+// const Config = require('./Config');
 const IpcCommunication = require('./Communication');
- var serialNumber = require('serial-number');
+
+ 
 
 
 let vkb;
 let Clientwin;
 let win;
 
-setupTitlebar();
+//setupTitlebar();
 
 function createWindow () 
 {
@@ -36,12 +37,17 @@ function createWindow ()
   win.setFullScreen(true);
   if(process.env.ELECTRON_DEV == true) 
   {
-    win.loadURL(`http://localhost:3000`);  
+   //win.loadURL(`http://localhost:3001`);  
+    win.loadURL(`http://20.51.254.15:3000`);
+    //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
   }
   else
   {
-    //win.loadURL(`http://localhost:3000`);
-    win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
+    //win.loadURL(`http://localhost:3001`);
+    //win.loadURL(`http://20.51.254.15:3000`);
+    win.loadURL(`http://20.51.254.15:3000`);
+    //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
+    //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
   }
   win.webContents.openDevTools() 
   win.maximize();
@@ -130,11 +136,27 @@ app.whenReady().then(() =>
     app.quit();
   });
 
+//   win.webContents.getPrintersAsync().then((data) => {
+//     if(data.length){
+//       const GetDefualtPrinter = data.filter(x=>x.isDefault === true);
+//       console.log(GetDefualtPrinter);
+//     }
+//     // data will be an array of printer objects
+// }).catch((e) => {
+//     // handle error here
+// })
+
+
+
   IpcCommunication(win,Clientwin);
   if(!process.env.ELECTRON_DEV) 
   {
     setTimeout(Updater(win),3000); 
   }
+
+  // setTimeout(() => {
+  //   PrintRecipt();
+  // }, 3000);
 })
 
 app.on('window-all-closed', () => {
