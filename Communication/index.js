@@ -2,7 +2,7 @@ const { ipcMain } = require('electron')
 const { app, BrowserWindow, screen } = require('electron')
 const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('../Menu')
 const { ReadConnectionFile, SetPinPad } = require('../Config/Connection');
-const { PrintRecipt } = require('../Config/Print');
+const { PrintRecipt,PreviewPrintRecipt } = require('../Config/Print');
 module.exports = (MainWin, ClientWin) => {
 
   ipcMain.handle('GetPinPadSetting', async (event, arg) => {
@@ -58,13 +58,24 @@ module.exports = (MainWin, ClientWin) => {
   });
 
 
+  
+  ipcMain.on('preview-print-recipt', async (e, data) => {
+    const getallprinter = await MainWin.webContents.getPrintersAsync();
+    //console.log(getallprinter);
+    if(getallprinter.length){
+      const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
+      PreviewPrintRecipt(data,GetDefualtPrinter[0].name);
+    }
+  });
+
   ipcMain.on('print-recipt', async (e, data) => {
     console.log('print-recipt');
 
     const getallprinter = await MainWin.webContents.getPrintersAsync();
-    console.log(getallprinter);
+    //console.log(getallprinter);
     if(getallprinter.length){
       const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
+      //console.log(GetDefualtPrinter);
       PrintRecipt(data,GetDefualtPrinter[0].name);
     }
     

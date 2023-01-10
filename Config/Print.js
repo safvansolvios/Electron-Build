@@ -1,8 +1,10 @@
 const {PosPrinter} = require("electron-pos-printer");
 const {currencyFormat}  = require('../utility/StringHelpers')
+const { app, BrowserWindow,screen,Menu} = require('electron')
+const {TestFuncation,buildMenu,buildDefaultTemplate,buildDarwinTemplate } = require('../Menu')
 
 const options = {
-    //preview: true,
+    preview: false,
     copies: 1,
     printerName: 'EPSON TM-T20II Receipt',
     pageSize: '80mm',
@@ -51,8 +53,6 @@ const Producttable = (data) =>{
 
 const MapData = (data) =>{
 
-    console.log(data);
-    
     const NewData = [
         {
             type: 'text', value: '***DUPLICATE COPY***', style: { 
@@ -129,10 +129,44 @@ const MapData = (data) =>{
 const PrintRecipt = (data,name) =>{
 
     options.printerName = name;
-    console.log(options);
     PosPrinter.print(MapData(data), options)
+    .then(res =>{ })
+    .catch((error) => {
+       console.error(error);
+     });
+}
+
+
+
+const PreviewPrintRecipt = (data,name) =>{
+   // options.printerName = name;
+    PosPrinter.print(MapData(data), {
+        ...options,
+        printerName:name,
+        preview:true,
+        silent:false
+     })
     .then(res =>{
-        console.log(res);
+        let count = BrowserWindow.getAllWindows().filter(b => { return b.isVisible()});
+        for (let index = 0; index < count.length; index++) {
+            if(count[index].getTitle() === 'Print preview'){
+                count[index].setMinimizable(false);
+                count[index].setMaximizable(false);
+                const template = [
+                    {
+                      label: 'print',
+                      click: () => { 
+                        count[index].webContents.print({silent: true, printBackground: true, deviceName : name},() => {
+                            count[index].close();
+                        });
+                        //count[index].close();
+                     }
+                    }
+                  ]
+                  const menu = Menu.buildFromTemplate(template)
+                  count[index].setMenu(menu);
+            }
+        }
     })
     .catch((error) => {
        console.error(error);
@@ -140,5 +174,6 @@ const PrintRecipt = (data,name) =>{
 }
 
 module.exports = {
-    PrintRecipt
+    PrintRecipt,
+    PreviewPrintRecipt
 }
