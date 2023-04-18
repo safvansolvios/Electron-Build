@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <script>
+        const { ipcRenderer } = require("electron")
+        const JsBarcode = require("jsbarcode");
+
+        ipcRenderer.on("LoadInvoice", function (event, data) {
+            console.log(data);
+            document.getElementById('InvoiceData').innerHTML = data.html;
+            if (data.info.PrintObject.PrintbarcodeonComReceipt) {
+                JsBarcode('#barcode', data.info.InvoiceNo, {
+                    lineColor: "#000",
+                    textMargin: 0,
+                    fontOptions: 'bold',
+                    fontSize: 12,
+                    width: 2,
+                    height: 60,
+                    displayValue: false
+                });
+            }
+        });
+    </script>
+    <style>
+            @page {
+                margin: 10px;
+                page-break-before: always;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            .d-none {
+                display: none !important;
+            }
+
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .botiga-head {
+                text-align: center;
+            }
+
+            .dop-copy {
+                text-align: center;
+                margin-bottom: 15px;
+                margin-top: 0.5em;
+                font-size: 14px;
+            }
+
+            .left-text {
+                margin: 5px 5px;
+            }
+
+            .left-text p {
+                font-size: 12px;
+                margin-bottom: 5px;
+            }
+
+            .table-side {
+                margin: 0px 5px;
+            }
+
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td,
+            th {
+                border: 1px solid #dddddd;
+                text-align: center;
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .bottom-tab h6 {
+                font-size: 16px;
+                padding-right: 0.5em;
+            }
+
+            hr {
+                border-top: 1px solid #000;
+            }
+
+            .bottom-tab {
+                text-transform: uppercase;
+                margin: 5px 5px 0px 5px;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .bottom-tab h4 {
+                font-size: 14px;
+            }
+
+            .thank {
+                text-align: center;
+                margin-top: 15px;
+            }
+
+            #barcode {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+    </style>
+</head>
+
+<body>
+    <div id="InvoiceData">
+
+    </div>
+    <svg id="barcode"></svg>
+</body>
+
+</html>

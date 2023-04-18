@@ -1,15 +1,10 @@
-const { app, BrowserWindow,screen} = require('electron')
+const { app, BrowserWindow, screen, dialog } = require('electron')
 const path = require('path')
-const {TestFuncation,buildMenu,buildDefaultTemplate,buildDarwinTemplate } = require('./Menu')
-const { setupTitlebar} = require('custom-electron-titlebar/main');
+const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('./Menu')
 const VirtualKeyboard = require('electron-virtual-keyboard');
-const {GetAllConnection ,SetConnection,SetPinPad,GetPinpadSetting} = require('./Config/Connection');
 const Updater = require('./Config/Update');
-// const {store} = require('./Config/Store');
-// const Config = require('./Config');
 const IpcCommunication = require('./Communication');
-
- 
+const { print } = require('pdf-to-printer');
 
 
 let vkb;
@@ -17,14 +12,13 @@ let Clientwin;
 let win;
 
 //setupTitlebar();
-
-function createWindow () 
-{
+app.commandLine.appendSwitch('disable-http2');
+async function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   win = new BrowserWindow({
     width: width,
     height: height,
-    frame:false,
+    frame: false,
     webPreferences: {
       webSecurity: false,
       nodeIntegration: true,
@@ -35,54 +29,37 @@ function createWindow ()
   })
 
   win.setFullScreen(true);
-  if(process.env.ELECTRON_DEV == true) 
-  {
-   //win.loadURL(`http://localhost:3001`);  
-    win.loadURL(`http://20.51.254.15:3000`);
-    //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
-  }
-  else
-  {
-    //win.loadURL(`http://localhost:3001`);
+  if (process.env.ELECTRON_DEV == true) {
+    //win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
+    win.loadURL(`http://localhost:3000`);
     //win.loadURL(`http://20.51.254.15:3000`);
-    win.loadURL(`http://20.51.254.15:3000`);
-    //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
+  }
+  else {
+    //win.loadURL(`http://20.51.254.15:3000`);
+    win.loadURL(`http://localhost:3000`);
+    //win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
     //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
   }
-  win.webContents.openDevTools() 
+  
   win.maximize();
-  
-  
-  
-  // launch a task and increase the value of the progress bar for each step completed of a big task;
-  // the progress bar is set to completed when it reaches its maxValue (default maxValue: 100);
-  // ps: setInterval is used here just to simulate the progress of a task
-  
 
-try
-{
-  // SetConnection('Con1','https://test.regex101asdasd.com');
-  // SetConnection('Con2','https://test.regex101asdasd.com');
-  //SetPinPad('192.168.0.123','3254','231465789');
-  // store.set('connection',[
-  //   {id:1, url:'https://test.regex101asdasd.com'},
-  //   {id:2 ,url:'https://test.regex101asdasd.com'}
-  // ]);
-   
-}
-catch(e)
-{
-  console.log(e);
+  vkb = new VirtualKeyboard(win.webContents);
+
+ const data = await print('C:/Users/Smit Doshi/Downloads/smit_doshi.pdf', { 
+  printer: 'Microsoft Print to PDF',
+  silent:true,
+  
+});
+ console.log('data',data);
+  
 }
 
-vkb = new VirtualKeyboard(win.webContents);
-}
-
-function CreateClientWindow(externalDisplay,width,height){
+function CreateClientWindow(externalDisplay, width, height) {
   Clientwin = new BrowserWindow({
     width: width,
     height: height,
-    frame:false,
+    show:false,
+    frame: false,
     x: externalDisplay.bounds.x,
     y: externalDisplay.bounds.y,
     webPreferences: {
@@ -94,69 +71,45 @@ function CreateClientWindow(externalDisplay,width,height){
     }
   })
   //Clientwin.loadURL(`file://${path.resolve(__dirname,'ClientOrderScreen.html')}`); 
-  if(process.env.ELECTRON_DEV) 
-  {
-    Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
+  if (process.env.ELECTRON_DEV) {
+    //Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
+    Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
   }
-  else
-  {
-    Clientwin.loadURL(`file://${path.resolve(__dirname,'clientscreen.html')}`);  
+  else {
+    //Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
+    Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
   }
-  
-  Clientwin.webContents.openDevTools() 
-  Clientwin.maximize();
 
-
-  
-
-
-  
+  Clientwin.webContents.openDevTools()
+ // Clientwin.maximize();
 }
 
-app.whenReady().then(() =>
-{
+app.whenReady().then(() => {
+
   createWindow()
   const displays = screen.getAllDisplays()
   const externalDisplay = displays.find((display) => {
     return display.bounds.x !== 0 || display.bounds.y !== 0
   })
-  
 
-  if (externalDisplay) 
-  {
+
+  if (externalDisplay) {
     const { width, height } = externalDisplay.workAreaSize
-    CreateClientWindow(externalDisplay,width,height);
+    CreateClientWindow(externalDisplay, width, height);
   }
 
-  win.on('close', function(e)
-  {
+  win.on('close', function (e) {
     win.hide();
-    if(Clientwin != undefined)
-       Clientwin.hide();
+    if (Clientwin != undefined)
+      Clientwin.hide();
     app.quit();
   });
 
-//   win.webContents.getPrintersAsync().then((data) => {
-//     if(data.length){
-//       const GetDefualtPrinter = data.filter(x=>x.isDefault === true);
-//       console.log(GetDefualtPrinter);
-//     }
-//     // data will be an array of printer objects
-// }).catch((e) => {
-//     // handle error here
-// })
-
-
-
-  IpcCommunication(win,Clientwin);
-  if(!process.env.ELECTRON_DEV) 
-  {
+  IpcCommunication(win, Clientwin);
+  if (!process.env.ELECTRON_DEV) {
     setTimeout(Updater(win),3000); 
   }
 
-  // setTimeout(() => {
-  //   PrintRecipt();
-  // }, 3000);
 })
 
 app.on('window-all-closed', () => {

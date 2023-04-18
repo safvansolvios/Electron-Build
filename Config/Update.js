@@ -8,6 +8,7 @@ var AutoUpdateprogressBar;
 autoUpdater.logger = require('electron-log');
 autoUpdater.logger.info();
 autoUpdater.autoDownload = false;
+autoUpdater.requestHeaders = {'Cache-Control' : 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'};
 
 module.exports = (win) =>{
     

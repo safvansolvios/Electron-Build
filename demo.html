@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .botiga-head {
+      text-align: center;
+    }
+
+    .dop-copy {
+      text-align: center;
+      margin-bottom: 15px;
+      margin-top: 35px;
+    }
+
+    .left-text {
+      margin: 10px 15px;
+    }
+
+    .left-text p {
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .table-side {
+      margin: 0px 15px;
+    }
+
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    td,
+    th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+      font-size: 12px;
+    }
+
+    .bottom-tab {
+      margin: 5px 15px 0px 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bottom-tab h4 {
+      font-size: 14px;
+    }
+
+    .thank {
+      text-align: center;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <section>
+    <div class="dop-copy">
+      <h2> ***DUPLICATE COPY***</h2>
+    </div>
+    <div class="botiga-head">
+      <h4>${data.CompanyName}</h4>
+      <h6>${data.Address}</h6>
+    </div>
+    <div class="left-text">
+      <P> ORDER : ${data.OrderNo} </P>
+      <P> INVOICE : ${data.InvoiceNo} </P>
+      <P> DATE/TIME: ${data.Time}</P>
+      <P> CASHIER : ${data.Cashier} </P>
+      <P> STATION : ${data.StationNo} </P>
+    </div>
+    <div class="table-side">
+      <table>
+        <tr>
+          <th>NO.</th>
+          <th>Product Name</th>
+          <th>QTY</th>
+          <th>Price</th>
+          <th>Total</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>Nike Air max By you</td>
+          <td>1</td>
+          <td> $60.00 </td>
+          <td> $60.00 </td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Pepso</td>
+          <td>1</td>
+          <td> $5.25 </td>
+          <td> $5.25</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Hello world</td>
+          <td>1</td>
+          <td> $11.00 </td>
+          <td> $11.00</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>MY work of things</td>
+          <td>1</td>
+          <td> $-1.00</td>
+          <td> $-1.00</td>
+        </tr>
+      </table>
+
+    </div>
+    <div class="bottom-tab">
+      <h4> Subtotal</h4>
+      <h6> $76.25 </h6>
+    </div>
+    <div class="bottom-tab">
+      <h4> Tax</h4>
+      <h6> $36.70 </h6>
+    </div>
+    <div class="bottom-tab">
+      <h4> DisCount(%) </h4>
+      <h6> $1.00 </h6>
+    </div>
+    <div class="bottom-tab">
+      <h4> GRAND TOTAL </h4>
+      <h6> $111.95 </h6>
+    </div>
+    <div class="thank">
+      <h4>Thank You</h4>
+    </div>
+
+  </section>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 {
-  "name": "my-electron-app",
-  "version": "2.1.45",
+  "name": "beta-botiga",
+  "version": "1.0.23",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,14 +9,15 @@
     "packagebuild": "set ELECTRON_DEV=false && electron-builder -w",
     "release": "set ELECTRON_DEV=false && electron-builder -w -p \"always\"",
     "gitrelease": "electron-builder create-self-signed-cert -p 77z",
-    "test123": "GH_TOKEN=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 npm run release"
+    "test123": "GH_TOKEN=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 npm run release"
   },
-  "repository": "https://github.com/dsmit089/Electron-React",
+  "repository": "https://github.com/SmitSolvios/Electron-Build",
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.27.2",
     "custom-electron-titlebar": "^4.1.0",
+    "electron-dl": "^3.5.0",
     "electron-log": "^4.4.8",
     "electron-pos-printer": "^1.3.6",
     "electron-progressbar": "^2.0.1",
@@ -24,7 +25,10 @@
     "electron-store": "^8.1.0",
     "electron-updater": "^5.2.1",
     "electron-virtual-keyboard": "^1.0.7",
+    "jsbarcode": "^3.11.5",
     "node-machine-id": "^1.1.12",
+    "nodemon": "^2.0.21",
+    "pdf-to-printer": "^5.6.0",
     "serial-number": "^1.3.0"
   },
   "devDependencies": {
@@ -33,8 +37,8 @@
   },
   "build": {
     "extends": null,
-    "productName": "Botiga",
-    "appId": "org.erb.Botiga",
+    "productName": "BetaBotiga",
+    "appId": "org.erb.BetaBotiga",
     "publish": {
       "provider": "github"
     },
