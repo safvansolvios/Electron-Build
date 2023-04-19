@@ -120,7 +120,7 @@ module.exports = (MainWin, ClientWin) => {
       directory:DirectoryPath,
       filename:Filename,
       onCompleted:  (item) => {
-        PrintReport(Filename,'Microsoft Print to PDF');      
+        PrintReport(MainWin,Filename,'Microsoft Print to PDF');      
       },
       showBadge: true
     })

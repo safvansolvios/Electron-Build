@@ -44,13 +44,7 @@ async function createWindow() {
   win.maximize();
 
   vkb = new VirtualKeyboard(win.webContents);
-
- const data = await print('C:/Users/Smit Doshi/Downloads/smit_doshi.pdf', { 
-  printer: 'Microsoft Print to PDF',
-  silent:true,
-  
-});
- console.log('data',data);
+ 
   
 }
 
