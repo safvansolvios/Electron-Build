@@ -10,12 +10,12 @@
             console.log(data);
             document.getElementById('InvoiceData').innerHTML = data.html;
             if (data.info.PrintObject.PrintbarcodeonComReceipt) {
-                JsBarcode('#barcode', data.info.InvoiceNo, {
+                JsBarcode('#barcode', `inc-01-${data.info.InvoiceNo}`, {
                     lineColor: "#000",
                     textMargin: 0,
                     fontOptions: 'bold',
-                    fontSize: 12,
-                    width: 2,
+                    fontSize: 8,
+                    width: 1,
                     height: 60,
                     displayValue: false
                 });

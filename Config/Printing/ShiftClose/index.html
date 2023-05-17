@@ -1,0 +1,231 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Invoice</title>
+
+    <style>
+        @page {
+            margin: 10px;
+            page-break-before: always;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font: 16px/1 'Open Sans', sans-serif;
+            overflow: auto;
+        }
+
+        html {
+            background: #fff;
+            cursor: default;
+        }
+
+        body {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #FFF;
+            border-radius: 1px;
+        }
+
+        .bot-border {
+            border-bottom: 1px dotted;
+            width: 26%;
+        }
+
+        .title {
+            text-align: center;
+        }
+
+        .order-txt {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 10px 0px 5px;
+        }
+
+        .order-txt h4 {
+            font-size: 90%;
+            text-align: justify;
+        }
+
+        .order-txt h6 {
+            font-weight: 500;
+            font-size: 90%;
+            margin-bottom: 0.5em;
+        }
+
+        .sale-total {
+            margin: 0.5em 0;
+            border-bottom: 1px dotted;
+            border-top: 1px dotted;
+            padding: 0.2em;
+        }
+        .flex-start{justify-content: flex-start !important;}
+        
+
+
+        .shift-deatils .order-txt h4 {
+            display: contents;
+        }
+
+        .pd2 {
+            padding-top: 0.2em;
+        }
+    </style>
+    <script>
+        const { ipcRenderer } = require("electron")
+        const formatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        });
+        ipcRenderer.on("LoadReport", function (event, data) {
+            console.log(data.info);
+            var keys = Object.keys(data.info);
+            for (let index = 0; index < keys.length; index++) {
+                const element = document.getElementById(keys[index]);
+
+                if (element) {
+                    if (!["storeId", "shift", "shiftStart", "shifEnd"].includes(keys[index]))
+                        element.innerText = data.info[keys[index]] !== null ? formatter.format(data.info[keys[index]]) : formatter.format(0)
+                    else
+                        element.innerText = data.info[keys[index]];
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div class="title">
+        <h2 style="margin-bottom: 10px;"> Botiga </h2>
+        <h4>Shift Report</h4>
+    </div>
+    <div class="shift-deatils">
+        <div class="order-txt flex-start">
+            <h4>Store : </h4>
+            <h6 id="storeId"></h6>
+        </div>
+        <div class="order-txt flex-start">
+            <h4>Shift # : </h4>
+            <h6 id="shift"></h6>
+        </div>
+        <div class="order-txt flex-start">
+            <h4>Shift Start : </h4>
+            <h6 id="shiftStart"></h6>
+        </div>
+        <div class="order-txt flex-start">
+            <h4>Shift End : </h4>
+            <h6 id="shifEnd"> 5/22023 9:54:43 AM</h6>
+        </div>
+    </div>
+
+    <div class="sale-total">
+        <h4> SALES TOTALS </h4>
+    </div>
+
+    <div class="order-txt text-width">
+        <h4> Net Sales </h4>
+        <h6 id="netSales"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Net Sales-Taxed </h4>
+        <h6 id="netSaleTaxed"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Net Sales-Not Taxed </h4>
+        <h6 id="netSalesNonTaxed"> $0.00</h6>
+    </div>
+    <div class="order-txt">
+        <h4> Exempt Sales </h4>
+        <h6 id="netSalesTaxExempt"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Taxes: </h4>
+        <h6 id="taxes"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Gross sales: </h4>
+        <h6 id="grossSales"> $0.00 </h6>
+    </div>
+    <div class="sale-total">
+        <h4> MEDIA TOTALS FOR SALES </h4>
+    </div>
+    <div class="order-txt">
+        <h4> Cash </h4>
+        <h6 id="totalCash"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Checks </h4>
+        <h6 id="totalCheck"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Credit/Debit </h4>
+        <h6 id="totalCreditDebit"> $0.00</h6>
+    </div>
+    <div class="order-txt">
+        <h4> EBT </h4>
+        <h6 id="totalEBT"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> On Account </h4>
+        <h6 id="onAccount"> $0.00 </h6>
+    </div>
+    <div class="sale-total">
+        <h4> PERFORMANCE STATISTICS </h4>
+    </div>
+    <div class="order-txt">
+        <h4> Transaction </h4>
+        <h6 id="totalTransaction"> 1 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Avg Transaction </h4>
+        <h6 id="averageTrnsaction"> $0.00 </h6>
+    </div>
+
+    <div class="sale-total">
+        <h4> CASH COUNT </h4>
+    </div>
+
+    <div class="order-txt">
+        <h4> Opening Cash </h4>
+        <h6 id="openingCash"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> + Cash Drawer Deposit </h4>
+        <h6 id="cashDrawerDeposit"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> + Cash Sales/AR Payments </h4>
+        <h6 id="cashSales"> $0.00 </h6>
+    </div>
+    <div class="bot-border">
+        <span>
+        </span>
+    </div>
+    <div class="order-txt pd2">
+        <h4> Expected Cash </h4>
+        <h6 id="expectedCash"> $0.00 </h6>
+    </div>
+    <div class="order-txt">
+        <h4> Actual Cash </h4>
+        <h6 id="actualCash"> $0.00 </h6>
+    </div>
+    <div class="bot-border">
+        <span>
+        </span>
+    </div>
+
+    <div class="order-txt pd2">
+        <h4> Short </h4>
+        <h6 id="shortAmount"> $0.00 </h6>
+    </div>
+</body>

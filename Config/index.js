@@ -1,8 +1,10 @@
+const { PrintInvoiceRecipt, PreviewPrintInvoiceRecipt } = require('../Config/Printing/Invoice');
+const { PrintShiftReport} = require('../Config/Printing/ShiftClose');
+const { PrintReport } = require('../Config/Printing/Report');
 
-const Dev = require('./DevConfig');
-const Prod = require('./ProdConfig');
-
-module.exports = () =>
-{
-    return process.env.ELECTRON_DEV ? Dev : Prod;
-};
+module.exports = {
+    PrintInvoiceRecipt,
+    PreviewPrintInvoiceRecipt,
+    PrintShiftReport,
+    PrintReport
+}

@@ -1,15 +1,13 @@
-const { app, BrowserWindow, screen, dialog } = require('electron')
+const { app, BrowserWindow, screen, dialog,session } = require('electron')
 const path = require('path')
-const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('./Menu')
 const VirtualKeyboard = require('electron-virtual-keyboard');
 const Updater = require('./Config/Update');
 const IpcCommunication = require('./Communication');
-const { print } = require('pdf-to-printer');
-
 
 let vkb;
 let Clientwin;
 let win;
+let AuthToken = 'test';
 
 //setupTitlebar();
 app.commandLine.appendSwitch('disable-http2');
@@ -25,27 +23,25 @@ async function createWindow() {
       enableRemoteModule: true,
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
-    }
+    },
   })
-
+  
   win.setFullScreen(true);
   if (process.env.ELECTRON_DEV == true) {
-    //win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
-    win.loadURL(`http://localhost:3000`);
+    win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
+    
+    //win.loadURL(`http://localhost:3000`);
+    
     //win.loadURL(`http://20.51.254.15:3000`);
   }
   else {
     //win.loadURL(`http://20.51.254.15:3000`);
-    win.loadURL(`http://localhost:3000`);
-    //win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
+    //win.loadURL(`http://localhost:3000`);
+    win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
     //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
   }
-  
   win.maximize();
-
   vkb = new VirtualKeyboard(win.webContents);
- 
-  
 }
 
 function CreateClientWindow(externalDisplay, width, height) {
@@ -117,6 +113,7 @@ app.on('activate', () => {
     createWindow();
   }
 })
+
 
 
 

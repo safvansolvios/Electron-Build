@@ -1,6 +1,6 @@
 {
   "name": "beta-botiga",
-  "version": "1.0.23",
+  "version": "1.0.30",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "packagebuild": "set ELECTRON_DEV=false && electron-builder -w",
     "release": "set ELECTRON_DEV=false && electron-builder -w -p \"always\"",
     "gitrelease": "electron-builder create-self-signed-cert -p 77z",
-    "test123": "GH_TOKEN=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 npm run release"
+    "test123": "GH_TOKEN=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 npm run release",
+    "test124": "GH_TOKEN=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 npm run release"
   },
   "repository": "https://github.com/SmitSolvios/Electron-Build",
   "author": "",

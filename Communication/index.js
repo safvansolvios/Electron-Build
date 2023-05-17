@@ -2,8 +2,7 @@ const { ipcMain } = require('electron')
 const { app, BrowserWindow, screen } = require('electron')
 const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('../Menu')
 const { ReadConnectionFile, SetPinPad } = require('../Config/Connection');
-const { PrintInvoiceRecipt, PreviewPrintInvoiceRecipt } = require('../Config/Printing/Invoice');
-const { PrintReport } = require('../Config/Printing/Report');
+const print = require('../Config');
 const { download } = require('electron-dl');
 const path = require('path')
 
@@ -90,8 +89,12 @@ module.exports = (MainWin, ClientWin) => {
     //console.log(getallprinter);
     if (getallprinter.length) {
       const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
-      PreviewPrintInvoiceRecipt(data, GetDefualtPrinter[0].name);
+      print.PreviewPrintInvoiceRecipt(data, GetDefualtPrinter[0].name);
     }
+  });
+
+  ipcMain.on('print-Shift-recipt', async (e, data) => {
+      print.PrintShiftReport(data.data, data.printer);
   });
 
   ipcMain.on('print-recipt', async (e, data) => {
@@ -105,40 +108,54 @@ module.exports = (MainWin, ClientWin) => {
       const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
       PrinterName = GetDefualtPrinter[0].name;
     }
-    await PrintInvoiceRecipt(data, PrinterName);
+    await print.PrintInvoiceRecipt(data, PrinterName);
     for (let index = 0; index < data.PrintObject.Extracopy; index++) {
-      await PrintInvoiceRecipt(data, PrinterName);
+      await print.PrintInvoiceRecipt(data, PrinterName);
     }
   });
 
   ipcMain.on('print-Report', async (e, data) => {
-
     
     const Filename = `temp_${Math.floor((Math.random() * 1000) + 1)}.pdf`;
     const DirectoryPath = path.join(app.getAppPath(),'temp');
-    await download(MainWin, data, {
+
+    const DownloadWindow = new BrowserWindow({show: false});
+    DownloadWindow.loadURL(data.url,{
+      extraHeaders:`Authorization:Bearer ${data.Token}`
+    });
+
+    await download(DownloadWindow, data.url, {
       directory:DirectoryPath,
       filename:Filename,
       onCompleted:  (item) => {
-        PrintReport(MainWin,Filename,'Microsoft Print to PDF');      
+        print.PrintReport(MainWin,Filename,data.printer);  
+        DownloadWindow.close();    
       },
       showBadge: true
     })
       .then(dl => {
+        DownloadWindow.close();
       }).catch(err => {
         console.log('err');
         console.log(err);
+        DownloadWindow.close();
       });
   });
 
   ipcMain.on('download-Report', async (e, data) => {
+    
+    const DownloadWindow = new BrowserWindow({show: false});
+    DownloadWindow.loadURL(data.url,{
+      extraHeaders:`Authorization:Bearer ${data.Token}`
+    });
 
-    await download(MainWin, data, {
+    await download(DownloadWindow, data.url, {
       onProgress: (progress) => {
         MainWin.webContents.send("download progress", progress);
       },
       onCompleted: (item) => {
         MainWin.webContents.send("download complete", item);
+        DownloadWindow.close();
       },
       onStarted: () => {
         MainWin.webContents.send("download start", "Start Download");
@@ -146,9 +163,11 @@ module.exports = (MainWin, ClientWin) => {
       showBadge: true
     })
       .then(dl => {
+        DownloadWindow.close();
       }).catch(err => {
         console.log('err');
         console.log(err);
+        DownloadWindow.close();
       });
 
   });
