@@ -15,15 +15,14 @@ module.exports = (win) =>{
     autoUpdater.checkForUpdates();
     
 
-    autoUpdater.on('update-available',()=>
+    autoUpdater.on('update-available',(info)=>
     {
-
-
         dialog.showMessageBox({
-            title: `Botiga Update`,
-            message: `Update Available`,
-            detail: `A new Version of Botiga is available. Do you want to update now?`,
-            buttons: ['Update','No'],
+            type: 'info',
+            title: 'Updates available',
+            message: `Version: ${info.version} is now available.`,
+            detail: `${info.releaseNotes}`,
+            buttons: ['Update', 'Later'],
            }).then(res=>{
             let btnindex = res.response;
 
@@ -51,7 +50,7 @@ module.exports = (win) =>{
 
     });
 
-    autoUpdater.on('update-downloaded',()=>
+    autoUpdater.on('update-downloaded',(info)=>
     {
         // if(AutoUpdateprogressBar != undefined)
         // {
@@ -59,10 +58,11 @@ module.exports = (win) =>{
         // }
 
         dialog.showMessageBox({
-            title: `Botiga Update`,
-            message: `Update Ready`,
-            detail: `Install & Restart Now?`,
-            buttons: ['Update','No'],
+            type: 'info',
+            title: 'Updates available',
+            message: `Version: ${info.version} is now available.`,
+            detail: `${info.releaseNotes}`,
+            buttons: ['Restart', 'Later'],
            }).then(res=>{
             let btnindex = res.response;
            

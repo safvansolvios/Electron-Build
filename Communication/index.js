@@ -20,6 +20,10 @@ module.exports = (MainWin, ClientWin) => {
     return data;
   })
 
+  ipcMain.handle('GetVersion', async (event, arg) => {
+    return app.getVersion();
+  })
+
   ipcMain.handle('SetPinPadSetting', async (event, arg) => {
     try {
       SetPinPad(arg);

@@ -30,13 +30,13 @@ async function createWindow() {
   if (process.env.ELECTRON_DEV == true) {
     win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
     
-    //win.loadURL(`http://localhost:3000`);
+    //win.loadURL(`http://localhost:3001`);
     
     //win.loadURL(`http://20.51.254.15:3000`);
   }
   else {
     //win.loadURL(`http://20.51.254.15:3000`);
-    //win.loadURL(`http://localhost:3000`);
+    //win.loadURL(`http://localhost:3001`);
     win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
     //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
   }
