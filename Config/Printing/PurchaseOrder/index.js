@@ -1,4 +1,4 @@
-const { currencyFormat } = require('../../../utility/StringHelpers')
+const { currencyFormat } = require('../../../utility/Helpers')
 const { BrowserWindow, Menu } = require('electron')
 const path = require('path')
 

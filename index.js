@@ -1,16 +1,23 @@
-const { app, BrowserWindow, screen, dialog,session } = require('electron')
+const { app, BrowserWindow, screen, dialog, session } = require('electron')
 const path = require('path')
 const VirtualKeyboard = require('electron-virtual-keyboard');
 const Updater = require('./Config/Update');
+const Store = require('./Config/Store');
 const IpcCommunication = require('./Communication');
+
+
 
 let vkb;
 let Clientwin;
 let win;
-let AuthToken = 'test';
+const terminalConfig = Store.get('terminalConfig');
+// Store.set('terminalConfig.connection','http://192.168.1.50:3001')
+// Store.set('terminalConfig.terminalId','01')
+// Store.set('terminalConfig.storeId','01')
+// Store.set('terminalConfig.storeName','MyStore1')
 
-//setupTitlebar();
 app.commandLine.appendSwitch('disable-http2');
+
 async function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   win = new BrowserWindow({
@@ -25,21 +32,31 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
   })
-  
+  await win.webContents.session.clearStorageData({
+    storages:['localstorage']
+  });
+
   win.setFullScreen(true);
-  if (process.env.ELECTRON_DEV == true) {
-    win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
-    
-    //win.loadURL(`http://localhost:3001`);
-    
-    //win.loadURL(`http://20.51.254.15:3000`);
+
+ console.log(terminalConfig);
+  if (terminalConfig) {
+    if (terminalConfig.connection && terminalConfig.terminalId && terminalConfig.storeId) {
+        win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
+        //win.loadURL(`http://localhost:3001`);
+        //win.loadURL(`http://20.51.254.15:3000`);
+    }
+    else {
+        win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
+        //win.loadURL(`http://localhost:3001?terminalsetup=true`);
+        //win.loadURL(`http://localhost:3001`);
+        //win.loadURL(`http://20.51.254.15:3000`);
+    }
+  } else {
+    win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
+    //win.loadURL(`http://localhost:3001?terminalsetup=true`);
   }
-  else {
-    //win.loadURL(`http://20.51.254.15:3000`);
-    //win.loadURL(`http://localhost:3001`);
-    win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
-    //win.loadURL(`file://${path.resolve(__dirname,'index.html')}`);  
-  }
+
+
   win.maximize();
   vkb = new VirtualKeyboard(win.webContents);
 }
@@ -48,7 +65,7 @@ function CreateClientWindow(externalDisplay, width, height) {
   Clientwin = new BrowserWindow({
     width: width,
     height: height,
-    show:false,
+    show: false,
     frame: false,
     x: externalDisplay.bounds.x,
     y: externalDisplay.bounds.y,
@@ -63,15 +80,15 @@ function CreateClientWindow(externalDisplay, width, height) {
   //Clientwin.loadURL(`file://${path.resolve(__dirname,'ClientOrderScreen.html')}`); 
   if (process.env.ELECTRON_DEV) {
     //Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
-    Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
+    Clientwin.loadURL(`file://${path.resolve(__dirname, 'index.html?ClientScreen=true')}`);
   }
   else {
     //Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
-    Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
+    //Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
   }
 
   Clientwin.webContents.openDevTools()
- // Clientwin.maximize();
+  // Clientwin.maximize();
 }
 
 app.whenReady().then(() => {
@@ -97,7 +114,7 @@ app.whenReady().then(() => {
 
   IpcCommunication(win, Clientwin);
   if (!process.env.ELECTRON_DEV) {
-    setTimeout(Updater(win),3000); 
+    setTimeout(Updater(win), 3000);
   }
 
 })

@@ -1,5 +1,5 @@
 const {PosPrinter} = require("electron-pos-printer");
-const {currencyFormat}  = require('../utility/StringHelpers')
+const {currencyFormat}  = require('../utility/Helpers')
 const { app, BrowserWindow,screen,Menu} = require('electron')
 const {TestFuncation,buildMenu,buildDefaultTemplate,buildDarwinTemplate } = require('../Menu')
 

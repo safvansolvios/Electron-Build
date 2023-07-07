@@ -5,47 +5,26 @@
 //D:\Botiga\Electron-Build\my-electron-app\node_modules\json-schema-typed\dist-types
 
 const Store = require('electron-store');
-const { execSync } = require('child_process');
 
-let _store;
-
-const _schema = 
-{
-	connection:
-    {
-        type: 'array',
-        items: 
-        {
-            type: 'object',
-            properties: 
-            {
-                id:{type:'number',},
-                ConnectionName:{type:'string'},
-                url:{ type: 'string',pattern:"^(http[s]?:\\/\\/(www\\.)?|ftp:\\/\\/(www\\.)?|www\\.){1}([0-9A-Za-z-\\.@:%_\+~#=]+)+((\\.[a-zA-Z]{2,3})+)(/(.)*)?(\\?(.)*)?"}
-            },
-            required: ["id","url"]
-        }
-    },    
-    pinpad:
-    {
+const _schema = {
+    terminalConfig: {
         type: 'object',
         properties: {
-            PinPadIp: { type: 'string' },
-            PinPadPort: { type: 'string' },
-            SerialNumber: { type: 'string' },
+            connection: {type: 'string'},
+            terminalId: {type: 'string'},
+            storeId: {type: 'string'},
+            storeName: {type: 'string'},
         },
     }
 };
 
+const store = new Store({
+    name: "TerminalSetting",
+    //encryptionKey:execSync('wmic csproduct get IdentifyingNumber').toString().replace('IdentifyingNumber','').trim(),
+    encryptionKey: ')u6+U5B#BB*N%&cw',
+    schema: _schema,
+    fileExtension: ".wxs",
+    cwd: "TerminalSetting",
+});
 
-   const store  = new Store({
-        name:"TerminalSetting",
-        encryptionKey:execSync('wmic csproduct get IdentifyingNumber').toString().replace('IdentifyingNumber','').trim(),
-        schema:_schema,
-        fileExtension:".wxs",
-        cwd:"TerminalSetting",
-    });
-
-module.exports = {
-    store
-};
+module.exports = store;

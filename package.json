@@ -1,6 +1,6 @@
 {
   "name": "beta-botiga",
-  "version": "1.0.51",
+  "version": "1.0.57",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "release": "build -p \"always\"",
     "gitrelease": "electron-builder create-self-signed-cert -p 77z",
     "test123": "GH_TOKEN=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 npm run release",
-    "test124": "GH_TOKEN=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 npm run release"
+    "test124": "GH_TOKEN=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 npm run release"
   },
   "repository": "https://github.com/SmitSolvios/Electron-Build",
   "author": "",
@@ -19,6 +19,7 @@
   "dependencies": {
     "axios": "^0.27.2",
     "custom-electron-titlebar": "^4.1.0",
+    "dns": "^0.2.2",
     "electron-dl": "^3.5.0",
     "electron-log": "^4.4.8",
     "electron-pos-printer": "^1.3.6",
@@ -28,9 +29,11 @@
     "electron-updater": "^5.2.1",
     "electron-virtual-keyboard": "^1.0.7",
     "jsbarcode": "^3.11.5",
+    "local-devices": "^4.0.0",
     "node-machine-id": "^1.1.12",
     "nodemon": "^2.0.21",
     "pdf-to-printer": "^5.6.0",
+    "ping": "^0.4.4",
     "serial-number": "^1.3.0"
   },
   "devDependencies": {
