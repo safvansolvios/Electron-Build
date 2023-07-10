@@ -3,19 +3,23 @@ const { app, BrowserWindow, screen } = require('electron')
 const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('../Menu')
 const { ReadConnectionFile, SetPinPad } = require('../Config/Connection');
 const print = require('../Config');
+const { getIP, Ping,GetMAC} = require('../utility/Helpers');
 const { download } = require('electron-dl');
 const path = require('path')
 const dns = require('dns');
 const Store = require('../Config/Store');
-var ping = require('ping');
 
+// Store.set('terminalConfig.connection','http://192.168.1.50:3001')
+// Store.set('terminalConfig.terminalId','01')
+// Store.set('terminalConfig.storeId','01')
+// Store.set('terminalConfig.storeName','MyStore1')
 
-const getIP = async (hostname) => {
-  let obj = await dns.promises.lookup(hostname).catch((error) => {
-    console.error(error);
-  });
-  return obj?.address;
-}
+// const getIP = async (hostname) => {
+//   let obj = await dns.promises.lookup(hostname).catch((error) => {
+//     console.error(error);
+//   });
+//   return obj?.address;
+// }
 
 module.exports = (MainWin, ClientWin) => {
 
@@ -36,12 +40,17 @@ module.exports = (MainWin, ClientWin) => {
   })
 
   ipcMain.handle('GetTerminalDetails', async (event, arg) => {
+
     const terminalConfig = Store.get('terminalConfig');
-    return {...terminalConfig,IpAddress:await getIP(terminalConfig.connection)};
+    return { 
+      ...terminalConfig,
+      IpAddress: await getIP(terminalConfig.connection),
+      MAC : await GetMAC()
+     };
   })
 
   ipcMain.handle('hostping', async (event, arg) => {
-    let res = await ping.promise.probe(arg.host);
+    let res = await Ping(arg.host);
     return res;
   })
 
@@ -54,7 +63,6 @@ module.exports = (MainWin, ClientWin) => {
     {
       return false;
     }
-    return false;
   })
 
   ipcMain.handle('terminalSetup', async (event, arg) => {
@@ -67,7 +75,7 @@ module.exports = (MainWin, ClientWin) => {
     } catch {
       return false;
     }
-    
+
   })
 
   ipcMain.handle('GetAllSetting', async (event, arg) => {

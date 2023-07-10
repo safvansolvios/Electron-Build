@@ -1,24 +1,22 @@
-const { app, BrowserWindow, screen, dialog, session } = require('electron')
+const { app, BrowserWindow, screen, dialog, session, net } = require('electron')
+const { getIP, Ping, GetMAC } = require('./utility/Helpers');
+const { CheckTerminal } = require('./service');
 const path = require('path')
 const VirtualKeyboard = require('electron-virtual-keyboard');
 const Updater = require('./Config/Update');
 const Store = require('./Config/Store');
 const IpcCommunication = require('./Communication');
 
-
-
-let vkb;
 let Clientwin;
 let win;
+
+
 const terminalConfig = Store.get('terminalConfig');
-// Store.set('terminalConfig.connection','http://192.168.1.50:3001')
-// Store.set('terminalConfig.terminalId','01')
-// Store.set('terminalConfig.storeId','01')
-// Store.set('terminalConfig.storeName','MyStore1')
 
 app.commandLine.appendSwitch('disable-http2');
 
 async function createWindow() {
+
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   win = new BrowserWindow({
     width: width,
@@ -33,30 +31,54 @@ async function createWindow() {
     },
   })
   await win.webContents.session.clearStorageData({
-    storages:['localstorage']
+    storages: ['localstorage']
   });
 
   win.setFullScreen(true);
 
- console.log(terminalConfig);
   if (terminalConfig) {
-    if (terminalConfig.connection && terminalConfig.terminalId && terminalConfig.storeId) {
-        win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
-        //win.loadURL(`http://localhost:3001`);
+    if (terminalConfig.connection != undefined &&
+      terminalConfig.terminalId != undefined &&
+      terminalConfig.storeId != undefined) {
+
+      let res = await getIP(terminalConfig.connection);
+
+      const DeviceInfo = {
+        macAddress: await GetMAC(),
+        terminalId: +terminalConfig.terminalId,
+        storeId: 1
+      }
+
+      const req = await CheckTerminal(res.address, DeviceInfo);
+      if (req.data.success) {
+        if (req.data.result.length > 0) {
+          //win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
+          win.loadURL(`http://localhost:3001`);
+          //win.loadURL(`http://20.51.254.15:3000`);
+        }
+      } 
+      else
+      {
+        //win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
+        win.loadURL(`http://localhost:3001?terminalsetup=true`);
         //win.loadURL(`http://20.51.254.15:3000`);
+      }
     }
     else {
-        win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
-        //win.loadURL(`http://localhost:3001?terminalsetup=true`);
-        //win.loadURL(`http://localhost:3001`);
-        //win.loadURL(`http://20.51.254.15:3000`);
+      // let res = await ping.promise.probe(terminalConfig.connection);
+      // console.log(res);
+      //win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
+      win.loadURL(`http://localhost:3001?terminalsetup=true`);
+      //win.loadURL(`http://localhost:3001`);
+      //win.loadURL(`http://20.51.254.15:3000`);
     }
   } else {
+    // let res = await ping.promise.probe(terminalConfig.connection);
+    // console.log(res);
     win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
     //win.loadURL(`http://localhost:3001?terminalsetup=true`);
   }
-
-
+  
   win.maximize();
   vkb = new VirtualKeyboard(win.webContents);
 }
