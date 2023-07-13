@@ -11,9 +11,10 @@ const _schema = {
         type: 'object',
         properties: {
             connection: {type: 'string'},
-            terminalId: {type: 'string'},
+            terminalName: {type: 'string'},
             storeId: {type: 'string'},
             storeName: {type: 'string'},
+            terminalRole: {type: 'string'}
         },
     }
 };

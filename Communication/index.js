@@ -3,7 +3,8 @@ const { app, BrowserWindow, screen } = require('electron')
 const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('../Menu')
 const { ReadConnectionFile, SetPinPad } = require('../Config/Connection');
 const print = require('../Config');
-const { getIP, Ping,GetMAC} = require('../utility/Helpers');
+const { getIP, Ping, GetMAC } = require('../utility/Helpers');
+const { CheckHealth } = require('../service');
 const { download } = require('electron-dl');
 const path = require('path')
 const dns = require('dns');
@@ -39,18 +40,49 @@ module.exports = (MainWin, ClientWin) => {
     return app.getVersion();
   })
 
+  ipcMain.handle('GetMac', async (event, arg) => {
+    console.log('GetMac');
+    return await GetMAC();
+  })
+
   ipcMain.handle('GetTerminalDetails', async (event, arg) => {
 
     const terminalConfig = Store.get('terminalConfig');
-    return { 
-      ...terminalConfig,
-      IpAddress: await getIP(terminalConfig.connection),
-      MAC : await GetMAC()
-     };
+    if (terminalConfig) {
+      return {
+        ...terminalConfig,
+        IpAddress: await getIP(terminalConfig.connection),
+        MAC: await GetMAC()
+      };
+    } else {
+      return {
+        connection: '',
+        terminalName: '',
+        storeId: '1',
+        storeName: '',
+        terminalRole: '',
+        IpAddress: '',
+        MAC: await GetMAC()
+      };
+    }
   })
 
   ipcMain.handle('hostping', async (event, arg) => {
     let res = await Ping(arg.host);
+    if (res.alive) {
+      try {
+        const Req = await CheckHealth(res.numeric_host);
+        if (Req.data.status === 'Healthy') {
+          return res;
+        } else {
+          res.alive = false;
+          return res;
+        }
+      } catch (e) {
+        res.alive = false;
+        return res;
+      }
+    }
     return res;
   })
 
@@ -66,13 +98,16 @@ module.exports = (MainWin, ClientWin) => {
   })
 
   ipcMain.handle('terminalSetup', async (event, arg) => {
+    console.log(arg);
     try {
       Store.set('terminalConfig.connection', arg.server)
-      Store.set('terminalConfig.terminalId', arg.terminal)
+      Store.set('terminalConfig.terminalName', arg.terminalName)
       Store.set('terminalConfig.storeId', arg.storeid)
       Store.set('terminalConfig.storeName', arg.storename)
+      Store.set('terminalConfig.terminalRole', arg.terminalRole)
       return true;
-    } catch {
+    } catch (e) {
+      console.log(e);
       return false;
     }
 

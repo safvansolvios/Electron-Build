@@ -1,2 +1,4 @@
 releaseInfo:
-   releaseNotes: "A software update can include, \n • Improvement"
+   releaseNotes: "A software update can include, \n • Terminal Setup"
+win:
+      icon : "./assets/images/icon256.png"
