@@ -1,6 +1,6 @@
 {
   "name": "beta-botiga",
-  "version": "1.0.66",
+  "version": "1.0.79",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "release": "build -p \"always\"",
     "gitrelease": "electron-builder create-self-signed-cert -p 77z",
     "test123": "GH_TOKEN=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 npm run release",
-    "test124": "GH_TOKEN=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 npm run release"
+    "test124": "GH_TOKEN=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 npm run release"
   },
   "repository": "https://github.com/SmitSolvios/Electron-Build",
   "author": "",
@@ -32,6 +32,7 @@
     "getmac": "^5.20.0",
     "jsbarcode": "^3.11.5",
     "local-devices": "^4.0.0",
+    "moment": "^2.29.4",
     "node-machine-id": "^1.1.12",
     "nodemon": "^2.0.21",
     "pdf-to-printer": "^5.6.0",
@@ -50,7 +51,7 @@
       "provider": "github"
     },
     "win": {
-      "icon":"./assets/images/icon256.png",
+      "icon": "./assets/images/icon256.png",
       "publisherName": "77z",
       "certificateFile": "77z.pfx",
       "certificatePassword": "",

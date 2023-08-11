@@ -6,7 +6,6 @@
         const { ipcRenderer } = require("electron")
 
         ipcRenderer.on("LoadInvoice", function (event, data) {
-            console.log(data);
             document.getElementById('InvoiceData').innerHTML = data.html;
            
         });

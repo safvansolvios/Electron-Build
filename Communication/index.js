@@ -9,7 +9,7 @@ const { download } = require('electron-dl');
 const path = require('path')
 const dns = require('dns');
 const Store = require('../Config/Store');
-
+const DEFAULT_PRINTER = 'Default';
 // Store.set('terminalConfig.connection','http://192.168.1.50:3001')
 // Store.set('terminalConfig.terminalId','01')
 // Store.set('terminalConfig.storeId','01')
@@ -22,7 +22,26 @@ const Store = require('../Config/Store');
 //   return obj?.address;
 // }
 
+
+
 module.exports = (MainWin, ClientWin) => {
+
+  const GetPrinter = async (printerName = 'Default') => {
+
+    const getallprinter = await MainWin.webContents.getPrintersAsync();
+    const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
+  
+    if (printerName === 'Default') {
+      return GetDefualtPrinter[0].name;
+    } else {
+      const PrinterInfo = getallprinter.filter(x => x.name === printerName)[0];
+      if (PrinterInfo) {
+        return PrinterInfo.name;
+      } else {
+        return GetDefualtPrinter[0].name;
+      }
+    }
+  };
 
   ipcMain.handle('GetPinPadSetting', async (event, arg) => {
 
@@ -41,7 +60,6 @@ module.exports = (MainWin, ClientWin) => {
   })
 
   ipcMain.handle('GetMac', async (event, arg) => {
-    console.log('GetMac');
     return await GetMAC();
   })
 
@@ -98,7 +116,6 @@ module.exports = (MainWin, ClientWin) => {
   })
 
   ipcMain.handle('terminalSetup', async (event, arg) => {
-    console.log(arg);
     try {
       Store.set('terminalConfig.connection', arg.server)
       Store.set('terminalConfig.terminalName', arg.terminalName)
@@ -166,75 +183,88 @@ module.exports = (MainWin, ClientWin) => {
   });
 
   ipcMain.on('preview-print-recipt', async (e, data) => {
-    const getallprinter = await MainWin.webContents.getPrintersAsync();
-    //console.log(getallprinter);
-    if (getallprinter.length) {
-      const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
-      print.PreviewPrintInvoiceRecipt(data, GetDefualtPrinter[0].name);
-    }
+    print.PreviewPrintInvoiceRecipt(data,await GetPrinter(DEFAULT_PRINTER));
+   
   });
 
   ipcMain.on('print-Shift-recipt', async (e, data) => {
-    print.PrintShiftReport(data.data, data.printer);
+    print.PrintShiftReport(data.data,await GetPrinter(data.printer));
   });
 
   ipcMain.on('print-recipt', async (e, data) => {
-    const getallprinter = await MainWin.webContents.getPrintersAsync();
-    let PrinterName = '';
-    const PrinterInfo = data.PrintObject.PrintSetupList.filter(x => x.type === data.PrintObject.ReceiptType)[0];
-    console.log(PrinterInfo)
-    if (PrinterInfo) {
-      PrinterName = PrinterInfo.printer;
-    } else {
-      const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
-      PrinterName = GetDefualtPrinter[0].name;
-    }
-    await print.PrintInvoiceRecipt(data, PrinterName);
+   
+    await print.PrintInvoiceRecipt(data,await GetPrinter(data.Printername));
     for (let index = 0; index < data.PrintObject.Extracopy; index++) {
-      await print.PrintInvoiceRecipt(data, PrinterName);
+      await print.PrintInvoiceRecipt(data,await GetPrinter(data.Printername));
     }
   });
 
   ipcMain.on('print-OAreceipt', async (e, data) => {
-    const getallprinter = await MainWin.webContents.getPrintersAsync();
-    let PrinterName = '';
-    const PrinterInfo = data.PrintObject.PrintSetupList.filter(x => x.type === data.PrintObject.ReceiptType)[0];
-    console.log(PrinterInfo)
-    if (PrinterInfo) {
-      PrinterName = PrinterInfo.printer;
-    } else {
-      const GetDefualtPrinter = getallprinter.filter(x => x.isDefault === true);
-      PrinterName = GetDefualtPrinter[0].name;
-    }
-    await print.PrintOAreceipt(data, PrinterName);
+   
+    await print.PrintOAreceipt(data,await GetPrinter(data.Printer));
 
   });
 
-  ipcMain.on('print-Report', async (e, data) => {
+  // ipcMain.on('print-Report', async (e, data) => {
+    
+  //   const Filename = `temp_${Math.floor((Math.random() * 1000) + 1)}.pdf`;
+  //   const DirectoryPath = path.join(app.getAppPath(), 'temp');
 
+  //   const DownloadWindow = new BrowserWindow({ show: false });
+  //   console.log('Downloading',data.url);
+  //   DownloadWindow.loadURL(data.url, {
+  //     extraHeaders: `Authorization:Bearer ${data.Token}`
+  //   });
+  //   console.log('Print',DirectoryPath);
+  //   await download(DownloadWindow, data.url, {
+  //     directory: DirectoryPath,
+  //     filename: Filename,
+  //     onCompleted: async (item) => {
+  //       print.PrintReport(MainWin, Filename,await GetPrinter(data.printer));
+  //       if(DownloadWindow)
+  //         DownloadWindow.close();
+  //     },
+  //     showBadge: true
+  //   })
+  //     .then(dl => {
+  //       if(DownloadWindow)
+  //         DownloadWindow.close();
+  //     }).catch(err => {
+  //       console.log(err);
+  //       if(DownloadWindow)
+  //         DownloadWindow.close();
+  //     });
+  // });
+
+
+  ipcMain.on('print-Report', async (e, data) => {
+    
     const Filename = `temp_${Math.floor((Math.random() * 1000) + 1)}.pdf`;
     const DirectoryPath = path.join(app.getAppPath(), 'temp');
 
     const DownloadWindow = new BrowserWindow({ show: false });
+    console.log('Downloading',data.url);
     DownloadWindow.loadURL(data.url, {
       extraHeaders: `Authorization:Bearer ${data.Token}`
     });
-
+    console.log('Print',DirectoryPath);
     await download(DownloadWindow, data.url, {
       directory: DirectoryPath,
       filename: Filename,
-      onCompleted: (item) => {
-        print.PrintReport(MainWin, Filename, data.printer);
-        DownloadWindow.close();
+      onCompleted: async (item) => {
+        print.PrintReport(MainWin, Filename,await GetPrinter(data.printer));
+        setTimeout(() => {
+          if(DownloadWindow){
+            DownloadWindow.close()
+          }
+        }, 2000);
       },
       showBadge: true
     })
       .then(dl => {
-        DownloadWindow.close();
+      
       }).catch(err => {
-        console.log('err');
-        console.log(err);
-        DownloadWindow.close();
+        
       });
   });
 
@@ -244,27 +274,44 @@ module.exports = (MainWin, ClientWin) => {
     DownloadWindow.loadURL(data.url, {
       extraHeaders: `Authorization:Bearer ${data.Token}`
     });
-
-    await download(DownloadWindow, data.url, {
-      onProgress: (progress) => {
-        MainWin.webContents.send("download progress", progress);
-      },
-      onCompleted: (item) => {
-        MainWin.webContents.send("download complete", item);
-        DownloadWindow.close();
-      },
-      onStarted: () => {
-        MainWin.webContents.send("download start", "Start Download");
-      },
-      showBadge: true
-    })
-      .then(dl => {
-        DownloadWindow.close();
-      }).catch(err => {
-        console.log('err');
-        console.log(err);
-        DownloadWindow.close();
+    console.log("download Report",data.url);
+    try{
+      await download(DownloadWindow, data.url, {
+        onProgress: (progress) => {
+          MainWin.webContents.send("download progress", progress);
+          console.log("download progress",progress);
+        },
+        onCompleted: (item) => {
+          MainWin.webContents.send("download complete", item);
+          try{
+            if(DownloadWindow){
+              DownloadWindow.close()
+            }
+          }
+          catch{}
+        },
+        onStarted: () => {
+          MainWin.webContents.send("download start", "Start Download");
+        }
       });
+    }
+    catch(err){
+      console.log(err);
+    }
+    
+      // .then(dl => {
+      //   setTimeout(() => {
+      //     if(DownloadWindow){
+      //       DownloadWindow.close()
+      //     }
+      //   }, 2000);
+      // }).catch(err => {
+      //   setTimeout(() => {
+      //     if(DownloadWindow){
+      //       DownloadWindow.close()
+      //     }
+      //   }, 2000);
+      // });
 
   });
 

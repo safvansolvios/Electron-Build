@@ -3,7 +3,6 @@ const path = require('path')
 
 
 const PrintShiftReport = (data, name) => {
-  
   return new Promise((resolve, reject) => {
     const PrintWindow = new BrowserWindow({
       width: 400,

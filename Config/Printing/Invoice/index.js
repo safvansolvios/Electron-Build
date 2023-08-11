@@ -19,7 +19,6 @@ const Producttable = (data) => {
 }
 
 const MapData = (data) => {
-  console.log(data);
     const html =
         `
  <div class="dop-copy">
@@ -34,7 +33,7 @@ const MapData = (data) => {
    <P class="${data.PrintObject.PrintCustomerinfo === 0 ? 'd-none' : '' }"> CUSTOMER ID : ${data.CustomerCode} </P>
    <P> DATE/TIME: ${data.Time}</P>
    <P> CASHIER : ${data.Cashier} </P>
-   <P> STATION : ${data.StationNo} </P>
+   <P> TERMINAL : ${data.Terminal} </P>
  </div>
  <div class="table-side">
  <hr>

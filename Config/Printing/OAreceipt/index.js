@@ -3,7 +3,6 @@ const { BrowserWindow, Menu } = require('electron')
 const path = require('path')
 
 const MapData = (data) => {
-  console.log(data);
   const html =
     `
         <div class="dop-copy">

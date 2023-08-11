@@ -69,8 +69,11 @@
             border-top: 1px dotted;
             padding: 0.2em;
         }
-        .flex-start{justify-content: flex-start !important;}
-        
+
+        .flex-start {
+            justify-content: flex-start !important;
+        }
+
 
 
         .shift-deatils .order-txt h4 {
@@ -83,12 +86,12 @@
     </style>
     <script>
         const { ipcRenderer } = require("electron")
+        const moment = require("moment")
         const formatter = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
         });
         ipcRenderer.on("LoadReport", function (event, data) {
-            console.log(data.info);
             var keys = Object.keys(data.info);
             for (let index = 0; index < keys.length; index++) {
                 const element = document.getElementById(keys[index]);
@@ -96,8 +99,13 @@
                 if (element) {
                     if (!["storeId", "shift", "shiftStart", "shifEnd"].includes(keys[index]))
                         element.innerText = data.info[keys[index]] !== null ? formatter.format(data.info[keys[index]]) : formatter.format(0)
-                    else
-                        element.innerText = data.info[keys[index]];
+                    else {
+                        if (["shiftStart", "shifEnd"].includes(keys[index])) {
+                            element.innerText = moment(data.info[keys[index]]).format("MM/DD/yyyy HH:mm");
+                        }else{
+                            element.innerText = data.info[keys[index]]
+                        }
+                    }
                 }
             }
         });

@@ -9,152 +9,162 @@ const IpcCommunication = require('./Communication');
 
 let Clientwin;
 let win;
+const uri = `file://${path.resolve(__dirname, 'index.html')}`;
+//const uri = 'http://localhost:3000';
 
 const terminalConfig = Store.get('terminalConfig');
 app.commandLine.appendSwitch('disable-http2');
 
+const gotTheLock = app.requestSingleInstanceLock()
 
-async function createWindow() {
+if (!gotTheLock) {
+  app.quit()
+} else {
 
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize
-  win = new BrowserWindow({
-    //icon:'./assets/images/icon256.png',
-    width: width,
-    height: height,
-    frame: false,
-    webPreferences: {
-      webSecurity: false,
-      nodeIntegration: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
-      preload: path.join(__dirname, 'preload.js')
-    },
-  })
-  await win.webContents.session.clearStorageData({
-    storages: ['localstorage']
-  });
+  async function createWindow() {
 
-  win.setFullScreen(true);
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize
+    win = new BrowserWindow({
+      //icon:'./assets/images/icon256.png',
+      width: width,
+      height: height,
+      frame: false,
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        contextIsolation: false,
+        preload: path.join(__dirname, 'preload.js')
+      },
+    })
+    await win.webContents.session.clearStorageData({
+      storages: ['localstorage']
+    });
 
-  if (terminalConfig) {
-    if (terminalConfig.connection != undefined &&
-      terminalConfig.terminalName != undefined &&
-      terminalConfig.storeId != undefined) {
 
-      let res = await getIP(terminalConfig.connection);
+    win.setFullScreen(true);
 
-      const DeviceInfo = {
-        macAddress: await GetMAC(),
-        terminalName: terminalConfig.terminalName,
-        storeId: 1
-      }
+    if (terminalConfig) {
+      if (terminalConfig.connection != undefined &&
+        terminalConfig.terminalName != undefined &&
+        terminalConfig.storeId != undefined) {
 
-      try {
-        const req = await CheckTerminal(res.address, DeviceInfo);
-        if (req.data.success) {
-          if (req.data.result.length > 0) {
-            win.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
-            //win.loadURL(`http://localhost:3000`);
-          } else {
-            win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
-            //win.loadURL(`http://localhost:3000?terminalsetup=true`);
+        let res = await getIP(terminalConfig.connection);
+
+        const DeviceInfo = {
+          macAddress: await GetMAC(),
+          terminalName: terminalConfig.terminalName,
+          storeId: 1
+        }
+
+        try {
+          const req = await CheckTerminal(res.address, DeviceInfo);
+          if (req.data.success) {
+            if (req.data.result.length > 0) {
+              win.loadURL(uri);
+            } else {
+              win.loadURL(`${uri}?terminalsetup=true`);
+            }
+          }
+          else {
+            win.loadURL(`${uri}?terminalsetup=true`);
           }
         }
-        else {
-          win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
-          //win.loadURL(`http://localhost:3000?terminalsetup=true`);
+        catch {
+          win.loadURL(`${uri}?terminalsetup=true`);
         }
       }
-      catch {
-        win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
-        //win.loadURL(`http://localhost:3000?terminalsetup=true`);
+      else {
+        win.loadURL(`${uri}?terminalsetup=true`);
       }
     }
     else {
-      win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
-      //win.loadURL(`http://localhost:3000?terminalsetup=true`);
-      //win.loadURL(`http://localhost:3000`);
+      win.loadURL(`${uri}?terminalsetup=true`);
     }
-  }
-  else {
-    win.loadURL(`file://${path.resolve(__dirname, 'index.html?terminalsetup=true')}`);
-    //win.loadURL(`http://localhost:3000?terminalsetup=true`);
+
+    win.maximize();
+    vkb = new VirtualKeyboard(win.webContents);
+
   }
 
-  win.maximize();
-  vkb = new VirtualKeyboard(win.webContents);
-}
+  function CreateClientWindow(externalDisplay, width, height) {
+    Clientwin = new BrowserWindow({
+      width: width,
+      height: height,
+      show: false,
+      frame: false,
+      x: externalDisplay.bounds.x,
+      y: externalDisplay.bounds.y,
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        contextIsolation: false,
+        preload: path.join(__dirname, 'Clientpreload.js')
+      }
+    })
+    //Clientwin.loadURL(`file://${path.resolve(__dirname,'ClientOrderScreen.html')}`); 
+    if (process.env.ELECTRON_DEV) {
+      //Clientwin.loadURL(`http://localhost:3001/#/ClientScreen`);
+      Clientwin.loadURL(`file://${path.resolve(__dirname, 'index.html?ClientScreen=true')}`);
+    }
+    else {
+      //Clientwin.loadURL(`http://localhost:3001/#/ClientScreen`);
+      //Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
+    }
 
-function CreateClientWindow(externalDisplay, width, height) {
-  Clientwin = new BrowserWindow({
-    width: width,
-    height: height,
-    show: false,
-    frame: false,
-    x: externalDisplay.bounds.x,
-    y: externalDisplay.bounds.y,
-    webPreferences: {
-      webSecurity: false,
-      nodeIntegration: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
-      preload: path.join(__dirname, 'Clientpreload.js')
+    Clientwin.webContents.openDevTools()
+    // Clientwin.maximize();
+  }
+
+  app.whenReady().then(() => {
+
+    createWindow()
+    const displays = screen.getAllDisplays()
+    const externalDisplay = displays.find((display) => {
+      return display.bounds.x !== 0 || display.bounds.y !== 0
+    })
+
+
+    if (externalDisplay) {
+      const { width, height } = externalDisplay.workAreaSize
+      CreateClientWindow(externalDisplay, width, height);
+    }
+
+    win.on('close', function (e) {
+      win.hide();
+      if (Clientwin != undefined)
+        Clientwin.hide();
+      app.quit();
+    });
+
+    IpcCommunication(win, Clientwin);
+    if (!process.env.ELECTRON_DEV) {
+      setTimeout(Updater(win), 3000);
+    }
+
+  })
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit()
     }
   })
-  //Clientwin.loadURL(`file://${path.resolve(__dirname,'ClientOrderScreen.html')}`); 
-  if (process.env.ELECTRON_DEV) {
-    //Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
-    Clientwin.loadURL(`file://${path.resolve(__dirname, 'index.html?ClientScreen=true')}`);
-  }
-  else {
-    //Clientwin.loadURL(`http://localhost:3000/#/ClientScreen`);
-    //Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
-  }
 
-  Clientwin.webContents.openDevTools()
-  // Clientwin.maximize();
-}
-
-app.whenReady().then(() => {
-
-  createWindow()
-  const displays = screen.getAllDisplays()
-  const externalDisplay = displays.find((display) => {
-    return display.bounds.x !== 0 || display.bounds.y !== 0
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   })
 
-
-  if (externalDisplay) {
-    const { width, height } = externalDisplay.workAreaSize
-    CreateClientWindow(externalDisplay, width, height);
-  }
-
-  win.on('close', function (e) {
-    win.hide();
-    if (Clientwin != undefined)
-      Clientwin.hide();
-    app.quit();
-  });
-
-  IpcCommunication(win, Clientwin);
-  if (!process.env.ELECTRON_DEV) {
-    setTimeout(Updater(win), 3000);
-  }
-
-})
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-})
-
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (win) {
+      if (win.isMinimized()) win.restore()
+      win.focus()
+    }
+  })
+}
 
 
 
