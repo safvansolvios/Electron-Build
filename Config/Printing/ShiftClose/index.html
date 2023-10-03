@@ -97,7 +97,7 @@
                 const element = document.getElementById(keys[index]);
 
                 if (element) {
-                    if (!["storeId", "shift", "shiftStart", "shifEnd"].includes(keys[index]))
+                    if (!["storeId", "shift", "shiftStart", "shifEnd","totalTransaction"].includes(keys[index]))
                         element.innerText = data.info[keys[index]] !== null ? formatter.format(data.info[keys[index]]) : formatter.format(0)
                     else {
                         if (["shiftStart", "shifEnd"].includes(keys[index])) {

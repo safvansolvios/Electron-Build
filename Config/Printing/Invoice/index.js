@@ -22,10 +22,9 @@ const MapData = (data) => {
     const html =
         `
  <div class="dop-copy">
-   <h2> ***DUPLICATE COPY***</h2>
+   <h2> ${data.CompanyName}</h2>
  </div>
  <div class="botiga-head ${data.CompanyName ? '':'d-none'}">
-   <h4>${data.CompanyName}</h4>
    <h6>${data.Address}</h6>
  </div>
  <div class="left-text">
@@ -34,6 +33,8 @@ const MapData = (data) => {
    <P> DATE/TIME: ${data.Time}</P>
    <P> CASHIER : ${data.Cashier} </P>
    <P> TERMINAL : ${data.Terminal} </P>
+   <P> PAYMENT METHOD : ${data.PaymentMethod} </P>
+   <P> CHANGE : ${currencyFormat(data.AmtChange)} </P>
  </div>
  <div class="table-side">
  <hr>
