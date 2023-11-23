@@ -10,8 +10,12 @@ const path = require('path')
 const Store = require('../Config/Store');
 const axios = require('axios');
 const fs = require('fs')
+const { exec,spawn  } = require('child_process');
+const log = require('electron-log');
 const DEFAULT_PRINTER = 'Default';
 
+log.transports.file.format = '{h}:{i}:{s} {text}';
+log.transports.file.maxSize = 5 * 1024 * 1024; // 5 MB
 
 module.exports = (MainWin, ClientWin) => {
 
@@ -31,6 +35,34 @@ module.exports = (MainWin, ClientWin) => {
       }
     }
   };
+
+  const OpenDrawer = async (printerName) =>{
+
+    //const customExePath = path.join(app.getAppPath(), `CashDrawer.exe "${printerName}"`);
+    //const customExePath = `${path.resolve(__dirname, `CashDrawer.exe "${printerName}"`)}`;
+    log.info(`app path. ${app.getAppPath()}`);
+    const customExePath = path.join(app.getAppPath(), '..','extraResources/CashDrawer.exe "MyPrinter"');
+    log.info(customExePath)
+
+    exec(`"${path.join(app.getAppPath(), '..','extraResources/CashDrawer.exe')}" "${printerName}"` , (error, stdout, stderr) => {
+      if (error) {
+          console.error(`Error: ${error}`);
+          log.info(`OpenDrawer error. ${error}`);
+          return;
+      }
+      console.log(`Output: ${stdout}`);
+      log.info(`OpenDrawer. ${stdout}`);
+    });
+  //   exec(customExePath, (error, stdout, stderr) => {
+  //     if (error) {
+  //         console.error(`Error: ${error}`);
+  //         log.info(`OpenDrawer error. ${error}`);
+  //         return;
+  //     }
+  //     console.log(`Output: ${stdout}`);
+  //     log.info(`OpenDrawer. ${stdout}`);
+  // });
+  }
 
   ipcMain.handle('GetPinPadSetting', async (event, arg) => {
 
@@ -131,6 +163,17 @@ module.exports = (MainWin, ClientWin) => {
       ClientWin.webContents.send('ClientScreenData', arg);
   });
 
+  ipcMain.on('RefreshPoleScreen', (event, arg) => {
+    console.log('RefreshPoleScreen')
+    setTimeout(() => {
+      if (ClientWin != undefined)
+      ClientWin.webContents.send('RefreshPoleScreen', arg);  
+    }, 2000);
+
+  });
+
+  
+
   ipcMain.handle('GetAllPrinter', async (event, arg) => {
     if (MainWin != undefined) {
       try {
@@ -149,6 +192,11 @@ module.exports = (MainWin, ClientWin) => {
       ClientWin.webContents.send('ClientScreenTransactionDone', arg);
   });
 
+  ipcMain.on('ShowChange', (event, arg) => {
+    if (ClientWin != undefined)
+      ClientWin.webContents.send('ShowChange', arg);
+  });
+
   ipcMain.on('title-updated', (e, data) => {
     MainWin.webContents.send('title-updated-Client', data);
   });
@@ -165,7 +213,12 @@ module.exports = (MainWin, ClientWin) => {
 
   ipcMain.on('open-clientscreen', (e, data) => {
     if (ClientWin) {
-      data === 1 ? ClientWin.show() : ClientWin.hide();
+      if(data.poleType === 1){
+        ClientWin.show()
+        ClientWin.webContents.send('PollImageInterval', data.Interval);
+      }else{
+        ClientWin.hide();
+      }
     }
   });
 
@@ -188,6 +241,7 @@ module.exports = (MainWin, ClientWin) => {
   ipcMain.on('print-recipt', async (e, data) => {
 
     await print.PrintInvoiceRecipt(data, await GetPrinter(data.Printername));
+    await OpenDrawer(data.Printername)
     for (let index = 0; index < data.PrintObject.Extracopy; index++) {
       await print.PrintInvoiceRecipt(data, await GetPrinter(data.Printername));
     }
@@ -251,6 +305,11 @@ module.exports = (MainWin, ClientWin) => {
 
   ipcMain.on('close-app', (e, data) => {
     app.quit();
+  });
+
+  ipcMain.on('open-cashdrawer', (e, data) => {
+    console.log(data);
+    OpenDrawer(data)
   });
 }
 

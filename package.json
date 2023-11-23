@@ -1,18 +1,18 @@
 {
-  "name": "beta-botiga",
-  "version": "1.0.88",
+  "name": "betabotiga",
+  "version": "1.1.21",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "electron": "set ELECTRON_DEV=true && electron .",
     "buildold": "set ELECTRON_DEV=false && electron-builder -w -c.releaseInfo.releaseNotes=\"new features\"",
-    "localbuild": "set ELECTRON_DEV=false && electron-builder -w",
+    "localbuild": "set ELECTRON_DEV=false && electron-builder -w -c ./builder-config.yaml",
     "build": "set ELECTRON_DEV=false && electron-builder -w -c ./builder-config.yaml --publish always",
     "release": "build -p \"always\"",
     "gitrelease": "electron-builder create-self-signed-cert -p 77z",
     "test123": "GH_TOKEN=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 npm run release",
-    "test124": "GH_TOKEN=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 npm run release"
+    "test124": "GH_TOKEN=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 npm run release"
   },
   "repository": "https://github.com/SmitSolvios/Electron-Build",
   "author": "",
@@ -34,6 +34,7 @@
     "local-devices": "^4.0.0",
     "moment": "^2.29.4",
     "node-machine-id": "^1.1.12",
+    "node-powershell": "^5.0.1",
     "nodemon": "^2.0.21",
     "pdf-to-printer": "^5.6.0",
     "ping": "^0.4.4",
@@ -44,6 +45,12 @@
     "electron-builder": "^23.3.3"
   },
   "build": {
+    "extraResources": [
+      "./extraResources/**"
+    ],
+    "extraFiles": [
+      "lib"
+    ],
     "extends": null,
     "productName": "BetaBotiga",
     "appId": "org.erb.BetaBotiga",
@@ -51,10 +58,9 @@
       "provider": "github"
     },
     "win": {
+      "requestedExecutionLevel": "highestAvailable",
       "icon": "./assets/images/icon256.png",
       "publisherName": "77z",
-      "certificateFile": "77z.pfx",
-      "certificatePassword": "",
       "verifyUpdateCodeSignature": "false",
       "publish": {
         "provider": "github"

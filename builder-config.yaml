@@ -1,4 +1,6 @@
+extraResources:
+      - "./extraResources/**"
 releaseInfo:
    releaseNotes: "A software update can include, \n • Fix Reports \n • Add statment Reports \n •Bug fixes"
 win:
-      icon : "./assets/images/icon256.png"
+   icon: "./assets/images/icon256.png"

@@ -6,11 +6,19 @@ const VirtualKeyboard = require('electron-virtual-keyboard');
 const Updater = require('./Config/Update');
 const Store = require('./Config/Store');
 const IpcCommunication = require('./Communication');
+const log = require('electron-log');
+const fs = require('fs');
+const { exec,spawn  } = require('child_process');
 
 let Clientwin;
 let win;
-const uri = `file://${path.resolve(__dirname, 'index.html')}`;
-//const uri = 'http://localhost:3000';
+
+// log.info(`getAppPath ${path.join(app.getAppPath(), '..','extraResources/CashDrawer.exe "MyPrinter"')}`)
+// log.info(`exe ${app.getPath("exe")}`)
+// log.info(`temp ${app.getPath("temp")}`)
+
+//const uri = `file://${path.resolve(__dirname, 'index.html')}`;
+const uri = 'http://localhost:3000';
 
 const terminalConfig = Store.get('terminalConfig');
 app.commandLine.appendSwitch('disable-http2');
@@ -82,16 +90,23 @@ if (!gotTheLock) {
       win.loadURL(`${uri}?terminalsetup=true`);
     }
 
-    win.maximize();
+    //win.maximize();
     vkb = new VirtualKeyboard(win.webContents);
-
+    
+    win.on('blur', () => {
+     const isMinimized = win.isMinimized();
+     if(!isMinimized){
+        win.focus();
+     }
+    });
   }
 
-  function CreateClientWindow(externalDisplay, width, height) {
+  function CreateClientWindow(externalDisplay) {
     Clientwin = new BrowserWindow({
-      width: width,
-      height: height,
-      show: false,
+      // width: width,
+      // height: height,
+      fullscreen:true,
+      show: true,
       frame: false,
       x: externalDisplay.bounds.x,
       y: externalDisplay.bounds.y,
@@ -103,18 +118,7 @@ if (!gotTheLock) {
         preload: path.join(__dirname, 'Clientpreload.js')
       }
     })
-    //Clientwin.loadURL(`file://${path.resolve(__dirname,'ClientOrderScreen.html')}`); 
-    if (process.env.ELECTRON_DEV) {
-      //Clientwin.loadURL(`http://localhost:3001/#/ClientScreen`);
-      Clientwin.loadURL(`file://${path.resolve(__dirname, 'index.html?ClientScreen=true')}`);
-    }
-    else {
-      //Clientwin.loadURL(`http://localhost:3001/#/ClientScreen`);
-      //Clientwin.loadURL(`file://${path.resolve(__dirname, 'clientscreen.html')}`);
-    }
-
-    Clientwin.webContents.openDevTools()
-    // Clientwin.maximize();
+    Clientwin.loadURL(`${uri}?ClientScreen=true`);
   }
 
   app.whenReady().then(() => {
@@ -128,8 +132,9 @@ if (!gotTheLock) {
 
     if (externalDisplay) {
       const { width, height } = externalDisplay.workAreaSize
-      CreateClientWindow(externalDisplay, width, height);
+      CreateClientWindow(externalDisplay);
     }
+    //CreateClientWindow(null);
 
     win.on('close', function (e) {
       win.hide();
