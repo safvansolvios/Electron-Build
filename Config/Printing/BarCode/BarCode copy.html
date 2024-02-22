@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const { ipcRenderer } = require("electron")
+        const JsBarcode = require("jsbarcode");
+
+        ipcRenderer.on("Load", function (event, data) {
+            document.getElementById('label').innerHTML = data.html;
+            JsBarcode('#barcode', data.info.barcode, {
+                lineColor: "#000",
+                textMargin: 0,
+                format: "CODE128",
+                fontSize: 16,
+                width: 1.5,
+                displayValue: false,
+                height: 18
+            });
+            //}
+        });
+    </script>
+    <style>
+        @page {
+            margin: 5px;
+            page-break-before: always;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        .product-details p {
+            font-size: 14px !important;
+            font-weight: bold;
+            margin-bottom: 0.5px;
+            display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+        }
+
+        .store-name {
+            border-bottom: 1px solid #000;
+            text-align: center;
+            margin-bottom: 2px;
+            font-weight: bold;
+        }
+
+        .barcode-div {
+            position: absolute;
+            bottom: -4px;
+            z-index: -1;
+            width: 100%;
+        }
+
+        #barcode {
+            width: 100% !important;
+        }
+
+        #InvoiceData {
+            height: 120px;
+            position: relative;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div id="InvoiceData">
+        <div class="label" id="label">
+        </div>
+        <div class="barcode-div">
+            <svg id="barcode"></svg>
+        </div>
+
+    </div>
+</body>
+
+</html>

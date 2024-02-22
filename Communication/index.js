@@ -1,18 +1,17 @@
 const { ipcMain } = require('electron')
-const { app, BrowserWindow, screen,session } = require('electron')
+const { app, BrowserWindow, screen, session } = require('electron')
 const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('../Menu')
 const { ReadConnectionFile, SetPinPad } = require('../Config/Connection');
 const print = require('../Config');
 const { getIP, Ping, GetMAC } = require('../utility/Helpers');
-const { CheckHealth } = require('../service');
+const { CheckHealth, OpenDrawerLog } = require('../service');
 const { download } = require('electron-dl');
 const path = require('path')
 const Store = require('../Config/Store');
 const axios = require('axios');
 const fs = require('fs')
-const { exec,spawn  } = require('child_process');
+const { exec, spawn } = require('child_process');
 const log = require('electron-log');
-const DEFAULT_PRINTER = 'Default';
 
 log.transports.file.format = '{h}:{i}:{s} {text}';
 log.transports.file.maxSize = 5 * 1024 * 1024; // 5 MB
@@ -36,32 +35,33 @@ module.exports = (MainWin, ClientWin) => {
     }
   };
 
-  const OpenDrawer = async (printerName) =>{
+  const OpenDrawer = async (printerName, reason) => {
+
+    const terminalConfig = Store.get('terminalConfig');
+
+    MainWin.webContents
+      .executeJavaScript('localStorage.getItem("Token");', true)
+      .then(result => {
+        OpenDrawerLog(terminalConfig.connection, result, reason).then(res => {
+        }).catch(err => { });
+      });
 
     //const customExePath = path.join(app.getAppPath(), `CashDrawer.exe "${printerName}"`);
     //const customExePath = `${path.resolve(__dirname, `CashDrawer.exe "${printerName}"`)}`;
     log.info(`app path. ${app.getAppPath()}`);
-    const customExePath = path.join(app.getAppPath(), '..','extraResources/CashDrawer.exe "MyPrinter"');
+    const customExePath = path.join(app.getAppPath(), '..', 'extraResources/CashDrawer.exe "MyPrinter"');
     log.info(customExePath)
 
-    exec(`"${path.join(app.getAppPath(), '..','extraResources/CashDrawer.exe')}" "${printerName}"` , (error, stdout, stderr) => {
+    exec(`"${path.join(app.getAppPath(), '..', 'extraResources/CashDrawer.exe')}" "${printerName}"`, (error, stdout, stderr) => {
       if (error) {
-          console.error(`Error: ${error}`);
-          log.info(`OpenDrawer error. ${error}`);
-          return;
+        console.error(`Error: ${error}`);
+        log.info(`OpenDrawer error. ${error}`);
+        return;
       }
       console.log(`Output: ${stdout}`);
       log.info(`OpenDrawer. ${stdout}`);
     });
-  //   exec(customExePath, (error, stdout, stderr) => {
-  //     if (error) {
-  //         console.error(`Error: ${error}`);
-  //         log.info(`OpenDrawer error. ${error}`);
-  //         return;
-  //     }
-  //     console.log(`Output: ${stdout}`);
-  //     log.info(`OpenDrawer. ${stdout}`);
-  // });
+
   }
 
   ipcMain.handle('GetPinPadSetting', async (event, arg) => {
@@ -87,12 +87,12 @@ module.exports = (MainWin, ClientWin) => {
   ipcMain.handle('GetTerminalDetails', async (event, arg) => {
 
     const terminalConfig = Store.get('terminalConfig');
-    
+
     if (terminalConfig) {
       const _getIP = await getIP(terminalConfig.connection);
       return {
         ...terminalConfig,
-        IpAddress: {..._getIP,address:`${_getIP.address}:8081`},
+        IpAddress: { ..._getIP, address: `${_getIP.address}:8081` },
         MAC: await GetMAC()
       };
     } else {
@@ -106,6 +106,11 @@ module.exports = (MainWin, ClientWin) => {
         MAC: await GetMAC()
       };
     }
+  })
+
+  ipcMain.handle('GetTerminalSitId', async (event, arg) => {
+    const terminalConfig = Store.get('terminalConfig');
+    return terminalConfig ? terminalConfig.sitId : null;
   })
 
   ipcMain.handle('hostping', async (event, arg) => {
@@ -167,12 +172,12 @@ module.exports = (MainWin, ClientWin) => {
     console.log('RefreshPoleScreen')
     setTimeout(() => {
       if (ClientWin != undefined)
-      ClientWin.webContents.send('RefreshPoleScreen', arg);  
+        ClientWin.webContents.send('RefreshPoleScreen', arg);
     }, 2000);
 
   });
 
-  
+
 
   ipcMain.handle('GetAllPrinter', async (event, arg) => {
     if (MainWin != undefined) {
@@ -185,7 +190,7 @@ module.exports = (MainWin, ClientWin) => {
       }
     }
   })
-  
+
 
   ipcMain.on('UpdateClientScreenTransactionDone', (event, arg) => {
     if (ClientWin != undefined)
@@ -213,10 +218,10 @@ module.exports = (MainWin, ClientWin) => {
 
   ipcMain.on('open-clientscreen', (e, data) => {
     if (ClientWin) {
-      if(data.poleType === 1){
+      if (data.poleType === 1) {
         ClientWin.show()
         ClientWin.webContents.send('PollImageInterval', data.Interval);
-      }else{
+      } else {
         ClientWin.hide();
       }
     }
@@ -229,7 +234,7 @@ module.exports = (MainWin, ClientWin) => {
   });
 
   ipcMain.on('preview-print-recipt', async (e, data) => {
-    console.log('printer',await GetPrinter(data.printer));
+    console.log('printer', await GetPrinter(data.printer));
     print.PreviewPrintInvoiceRecipt(data, await GetPrinter(data.printer));
 
   });
@@ -241,10 +246,16 @@ module.exports = (MainWin, ClientWin) => {
   ipcMain.on('print-recipt', async (e, data) => {
 
     await print.PrintInvoiceRecipt(data, await GetPrinter(data.Printername));
-    await OpenDrawer(data.Printername)
+    await OpenDrawer(data.Printername, 'Invoice')
     for (let index = 0; index < data.PrintObject.Extracopy; index++) {
       await print.PrintInvoiceRecipt(data, await GetPrinter(data.Printername));
     }
+  });
+
+  ipcMain.on('print-barcode', async (e, data) => {
+
+    await print.PrintBarCode(data, await GetPrinter(data.printer));
+
   });
 
   ipcMain.on('print-OAreceipt', async (e, data) => {
@@ -253,12 +264,14 @@ module.exports = (MainWin, ClientWin) => {
 
   ipcMain.on('print-Report', async (e, data) => {
     MainWin.webContents.send("Start Printing", "");
-    axios.get(data.url, { responseType: "arraybuffer", headers: { 
-      'Accept': 'application/pdf',
-      'Authorization':`Bearer ${data.Token}`
-     }})
-    .then(async (res) => {
-        const DirectoryPath = path.join(app.getPath("temp"),'tmp_pdf.pdf');
+    axios.get(data.url, {
+      responseType: "arraybuffer", headers: {
+        'Accept': 'application/pdf',
+        'Authorization': `Bearer ${data.Token}`
+      }
+    })
+      .then(async (res) => {
+        const DirectoryPath = path.join(app.getPath("temp"), 'tmp_pdf.pdf');
         MainWin.webContents.send('Logs', DirectoryPath);
         fs.writeFileSync(DirectoryPath, res.data, { encoding: "binary" });
         print.PrintReport(MainWin, DirectoryPath, await GetPrinter(data.printer))
@@ -268,38 +281,55 @@ module.exports = (MainWin, ClientWin) => {
       });
   });
 
+  ipcMain.on('print-Receipt-Report', async (e, data) => {
+    MainWin.webContents.send("Start Printing", "");
+    console.log('print-Receipt-Report-data', data)
+    axios.get(data.url, {
+      headers: {
+        'Authorization': `Bearer ${data.Token}`
+      }
+    })
+      .then(async (res) => {
+        console.log('print-Receipt-Report', res.data.result);
+        print.DetailsDailyReport(MainWin, res.data.result, await GetPrinter(data.printer))
+      }).catch(err => {
+        console.log(err)
+        MainWin.webContents.send("End Printing", "");
+      });
+  });
+
   ipcMain.on('download-Report', async (e, data) => {
 
-  session.defaultSession.webRequest.onBeforeSendHeaders( { urls: ["*://*/api/report/*"] }, (details, callback) => {
+    session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ["*://*/api/report/*"] }, (details, callback) => {
       details.requestHeaders['Authorization'] = `Bearer ${data.Token}`;
       callback({ requestHeaders: details.requestHeaders })
-  })
+    })
 
-  setTimeout(async() => {
-    try {
-      await download(MainWin, data.url, {
-        onProgress: (progress) => {
-          MainWin.webContents.send("download progress", progress);
-          console.log("download progress", progress);
-        },
-        onCompleted: (item) => {
-          MainWin.webContents.send("download complete", item);
-          try {
-            if (DownloadWindow) {
-              DownloadWindow.close()
+    setTimeout(async () => {
+      try {
+        await download(MainWin, data.url, {
+          onProgress: (progress) => {
+            MainWin.webContents.send("download progress", progress);
+            console.log("download progress", progress);
+          },
+          onCompleted: (item) => {
+            MainWin.webContents.send("download complete", item);
+            try {
+              if (DownloadWindow) {
+                DownloadWindow.close()
+              }
             }
+            catch { }
+          },
+          onStarted: () => {
+            MainWin.webContents.send("download start", "Start Download");
           }
-          catch { }
-        },
-        onStarted: () => {
-          MainWin.webContents.send("download start", "Start Download");
-        }
-      });
-    }
-    catch (err) {
-      console.log(err);
-    }
-  }, 2000);
+        });
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }, 2000);
   });
 
 
@@ -308,8 +338,24 @@ module.exports = (MainWin, ClientWin) => {
   });
 
   ipcMain.on('open-cashdrawer', (e, data) => {
-    console.log(data);
-    OpenDrawer(data)
+    OpenDrawer(data.printername, data.reason);
+  });
+
+  ipcMain.on('print-recall-invoice', (event, arg) => {
+
+    const focusedWindow = BrowserWindow.fromId(arg.windowId);
+
+    if (focusedWindow) {
+      focusedWindow.webContents.print({
+        silent: true,
+        margins: '0',
+        printBackground: true,
+        deviceName: arg.printerDeviceName
+      }, () => {
+        focusedWindow.close();
+      });
+    }
+
   });
 }
 

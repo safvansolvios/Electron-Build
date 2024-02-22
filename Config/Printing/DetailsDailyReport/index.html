@@ -1,0 +1,117 @@
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <script>
+       const { ipcRenderer } = require("electron")
+        var QRCode = require('qrcode')
+
+        ipcRenderer.on("Load", function (event, data) {
+         document.getElementById('daily-report').innerHTML = data.html;
+        });
+  </script>
+   <title>Financial Report</title>
+   <style>
+      @page {
+         margin: 10px;
+         margin: 0.5rem;
+      }
+
+      body {
+         font-family: Arial, sans-serif;
+         font-weight: 600;
+         padding: 0.5rem;
+      }
+
+      .report-text span {
+         font-size: 12px;
+      }
+
+      hr {
+         margin: 0.5rem 0.5rem;
+      }
+
+      table {
+         width: 100%;
+         font-weight: 600;
+      }
+
+      table tr td {
+         font-size: 12px;
+      }
+
+      table tr td:first-child {
+         border-bottom: 1px dotted;
+      }
+
+      tr td:last-child {
+         text-align: end;
+      }
+
+      .d-flex {
+         display: flex;
+         justify-content: space-between;
+         width: 100%;
+      }
+
+      .d-flex span {
+         font-size: 14px;
+      }
+
+      .d-report {
+         display: flex;
+         flex-wrap: wrap;
+      }
+
+      .report-text {
+         margin: 0 auto;
+         margin-bottom: 0.5rem;
+         text-align: center;
+      }
+
+      .report-text h4 {
+         margin: 0.5rem;
+         text-align: center;
+      }
+
+      h3 {
+         margin: 0.5rem;
+         text-align: center;
+         font-size: 14px;
+      }
+
+      .bordertop td {
+         border-top: 1px solid;
+      }
+
+      .borderbot td {
+         border-top: none;
+         border-bottom: 1px solid !important;
+      }
+
+      .bordernone td {
+         border-bottom: none !important;
+      }
+
+      table {
+         border: 1px solid;
+      }
+
+      @media (max-width: 425px) {
+         .report-text {
+            order: -1;
+         }
+      }
+   </style>
+</head>
+
+<body>
+   <div class="container">
+      <div class="daily-report" id="daily-report">
+         
+      </div>
+   </div>
+</body>
+
+</html>

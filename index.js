@@ -1,14 +1,12 @@
-const { app, BrowserWindow, screen, dialog, session, net } = require('electron')
-const { getIP, Ping, GetMAC } = require('./utility/Helpers');
+const { app, BrowserWindow, screen, dialog, session, net,Menu,globalShortcut  } = require('electron')
+const { getIP, Ping, GetMAC,generateRandomId } = require('./utility/Helpers');
 const { CheckTerminal } = require('./service');
 const path = require('path')
 const VirtualKeyboard = require('electron-virtual-keyboard');
 const Updater = require('./Config/Update');
 const Store = require('./Config/Store');
 const IpcCommunication = require('./Communication');
-const log = require('electron-log');
-const fs = require('fs');
-const { exec,spawn  } = require('child_process');
+//const log = require('electron-log');
 
 let Clientwin;
 let win;
@@ -17,8 +15,8 @@ let win;
 // log.info(`exe ${app.getPath("exe")}`)
 // log.info(`temp ${app.getPath("temp")}`)
 
-//const uri = `file://${path.resolve(__dirname, 'index.html')}`;
-const uri = 'http://localhost:3000';
+const uri = `file://${path.resolve(__dirname, 'index.html')}`;
+//const uri = 'http://localhost:3000';
 
 const terminalConfig = Store.get('terminalConfig');
 app.commandLine.appendSwitch('disable-http2');
@@ -52,10 +50,10 @@ if (!gotTheLock) {
 
     win.setFullScreen(true);
 
+    
+
     if (terminalConfig) {
-      if (terminalConfig.connection != undefined &&
-        terminalConfig.terminalName != undefined &&
-        terminalConfig.storeId != undefined) {
+      if (terminalConfig.connection != undefined && terminalConfig.terminalName != undefined && terminalConfig.storeId != undefined) {
 
         let res = await getIP(terminalConfig.connection);
 
@@ -92,12 +90,17 @@ if (!gotTheLock) {
 
     //win.maximize();
     vkb = new VirtualKeyboard(win.webContents);
-    
+
+    globalShortcut.register('CommandOrControl+R', () => {
+      //win.reload();
+      console.log('Do Nothing');
+    });
+
     win.on('blur', () => {
-     const isMinimized = win.isMinimized();
-     if(!isMinimized){
-        win.focus();
-     }
+      const isMinimized = win.isMinimized();
+      if (!isMinimized) {
+        //win.focus();
+      }
     });
   }
 
@@ -105,7 +108,7 @@ if (!gotTheLock) {
     Clientwin = new BrowserWindow({
       // width: width,
       // height: height,
-      fullscreen:true,
+      fullscreen: true,
       show: true,
       frame: false,
       x: externalDisplay.bounds.x,
@@ -121,7 +124,13 @@ if (!gotTheLock) {
     Clientwin.loadURL(`${uri}?ClientScreen=true`);
   }
 
+  
+
   app.whenReady().then(() => {
+
+    if(!terminalConfig?.sitId){
+      Store.set('terminalConfig.sitId', generateRandomId(24))
+    }
 
     createWindow()
     const displays = screen.getAllDisplays()
@@ -132,7 +141,7 @@ if (!gotTheLock) {
 
     if (externalDisplay) {
       const { width, height } = externalDisplay.workAreaSize
-      CreateClientWindow(externalDisplay);
+      //CreateClientWindow(externalDisplay);
     }
     //CreateClientWindow(null);
 
@@ -169,7 +178,12 @@ if (!gotTheLock) {
       win.focus()
     }
   })
+  app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
+  });
+  
 }
+
 
 
 

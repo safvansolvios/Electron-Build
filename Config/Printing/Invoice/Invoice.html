@@ -5,7 +5,8 @@
     <script>
         const { ipcRenderer } = require("electron")
         const JsBarcode = require("jsbarcode");
-
+        let Wid = null;
+        let DeviceName = null;
         ipcRenderer.on("LoadInvoice", function (event, data) {
             document.getElementById('InvoiceData').innerHTML = data.html;
             if (data.info.PrintObject.PrintbarcodeonComReceipt) {
@@ -19,108 +20,135 @@
                     displayValue: false
                 });
             }
+            Wid = data.WindowId;
+            DeviceName = data.printerDeviceName;
         });
+
+        function printrecallinvoice(){
+            ipcRenderer.send('print-recall-invoice',{ windowId: Wid,printerDeviceName:DeviceName});
+        }
     </script>
     <style>
-            @page {
-                margin: 10px;
-                page-break-before: always;
-            }
+        @page {
+            margin: 10px;
+            page-break-before: always;
+        }
 
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
+        @media print {
+            #btnprint {
+                display: none;
             }
+        }
 
-            .d-none {
-                display: none !important;
-            }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            body {
-                font-family: Arial, Helvetica, sans-serif;
-            }
+        .d-none {
+            display: none !important;
+        }
 
-            .botiga-head {
-                text-align: center;
-                margin-bottom: 10px;
-            }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
 
-            .dop-copy {
-                text-align: center;
-                margin-bottom: 15px;
-                margin-top: 0.5em;
-                font-size: 14px;
-            }
+        .botiga-head {
+            text-align: center;
+            margin-bottom: 10px;
+        }
 
-            .left-text {
-                margin: 5px 5px;
-            }
+        .dop-copy {
+            text-align: center;
+            margin-bottom: 15px;
+            margin-top: 0.5em;
+            font-size: 14px;
+        }
 
-            .left-text p {
-                font-size: 12px;
-                margin-bottom: 5px;
-            }
+        .left-text {
+            margin: 5px 5px;
+        }
 
-            .table-side {
-                margin: 0px 5px;
-            }
+        .left-text p {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
 
-            table {
-                font-family: arial, sans-serif;
-                border-collapse: collapse;
-                width: 100%;
-            }
+        .table-side {
+            margin: 0px 5px;
+        }
 
-            td,
-            th {
-                border: 1px solid #dddddd;
-                text-align: center;
-                padding: 8px;
-                font-size: 12px;
-            }
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
 
-            .bottom-tab h6 {
-                font-size: 16px;
-                padding-right: 0.5em;
-            }
+        td,
+        th {
+            border: 1px solid #dddddd;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+        }
 
-            hr {
-                border-top: 1px solid #000;
-            }
+        .bottom-tab h6 {
+            font-size: 16px;
+            padding-right: 0.5em;
+        }
 
-            .bottom-tab {
-                text-transform: uppercase;
-                margin: 5px 5px 0px 5px;
-                display: flex;
-                justify-content: space-between;
-            }
+        hr {
+            border-top: 1px solid #000;
+        }
 
-            .bottom-tab h4 {
-                font-size: 14px;
-            }
+        .bottom-tab {
+            text-transform: uppercase;
+            margin: 5px 5px 0px 5px;
+            display: flex;
+            justify-content: space-between;
+        }
 
-            .thank {
-                text-align: center;
-                margin-top: 15px;
-            }
+        .bottom-tab h4 {
+            font-size: 14px;
+        }
 
-            #barcode {
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .CardDetails h4,.CardDetails h6{
-                font-weight: 100 !important;
-                text-transform: none !important;
-            }
-            .m-5{
-                margin: 5px 0 !important;
-            }
+        .thank {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        #barcode {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .CardDetails h4,
+        .CardDetails h6 {
+            font-weight: 100 !important;
+            text-transform: none !important;
+        }
+
+        .m-5 {
+            margin: 5px 0 !important;
+        }
+
+        #btnprint {
+            position: absolute;
+            right: 5%;
+            padding: 5px;
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 5px;
+            font-size: 16px;
+        }
     </style>
 </head>
 
 <body>
+    <button id="btnprint" onclick="printrecallinvoice()">PRINT</button>
     <div id="InvoiceData">
 
     </div>

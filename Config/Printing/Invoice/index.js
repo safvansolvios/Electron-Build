@@ -1,6 +1,11 @@
 const { currencyFormat } = require('../../../utility/Helpers')
-const { BrowserWindow, Menu } = require('electron')
+const { BrowserWindow, Menu,ipcMain } = require('electron')
 const path = require('path')
+
+let PreviewPrintWindow = null;
+
+
+
 
 const Producttable = (data) => {
 
@@ -20,17 +25,18 @@ const Producttable = (data) => {
 
 const CardDetails = (data) => {
 
-  try{
+  try {
     if (data.length) {
       let html = '';
       for (let i = 0; i < data.length; i++) {
-        html += `<hr class="m-5">
+        html += `
+        <hr class="m-5">
         <div class="CardDetails">
-        <div class="bottom-tab">
+        <div class="bottom-tab ${data[i].cardEntry === 'Manual' ? 'd-none' : ''}">
           <h4> Card Number </h4>
           <h6> ******* ${data[i].cardNumber} </h6>
         </div>
-        <div class="bottom-tab">
+        <div class="bottom-tab ${data[i].cardEntry === 'Manual' ? 'd-none' : ''}">
           <h4> Card Type </h4>
           <h6> ${data[i].cardType} </h6>
         </div>
@@ -38,24 +44,28 @@ const CardDetails = (data) => {
           <h4> Card Entry </h4>
           <h6> ${data[i].cardEntry} </h6>
         </div>
-        <div class="bottom-tab">
+        <div class="bottom-tab ${data[i].cardEntry === 'Manual' ? 'd-none' : ''}">
           <h4> Auth # </h4>
          <h6> ${data[i].auth} </h6>
        </div>
-        <div class="bottom-tab">
+        <div class="bottom-tab ${data[i].cardEntry === 'Manual' ? 'd-none' : ''}">
          <h4> Reference # </h4>
          <h6> ${data[i].reference} </h6>
         </div>
-        <div class="bottom-tab">
+        <div class="bottom-tab ${data[i].cardEntry === 'Manual' ? 'd-none' : ''}">
          <h4> Application Label </h4>
          <h6> ${data[i].edcType} </h6>
+        </div>
+        <div class="bottom-tab">
+         <h4> Amount </h4>
+         <h6> ${currencyFormat(data[i].amount)} </h6>
         </div>
         </div>`
       }
       return html;
     }
     return '';
-  }catch{
+  } catch {
     return '';
   }
 }
@@ -76,8 +86,6 @@ const MapData = (data) => {
    <P> CASHIER : ${data.Cashier} </P>
    <P> TERMINAL : ${data.Terminal} </P>
    <P> PAYMENT METHOD : ${data.PaymentMethod} </P>
-   <P> CHANGE : ${currencyFormat(data.AmtChange)} </P>
-   <P> AMOUNT TENDERED : ${currencyFormat(data.AmtTendered)} </P>
  </div>
  <div class="table-side">
  <hr>
@@ -110,7 +118,21 @@ const MapData = (data) => {
    <h6> ${currencyFormat(data.Grandtotal)} </h6>
  </div>
 
- ${CardDetails(data.CardDetails)}
+  ${data.PaymentMethod.indexOf('CA') > -1 ?
+        `<hr class="m-5">
+            <div class="CardDetails">
+            <div class="bottom-tab">
+              <h4> AMOUNT TENDERED </h4>
+              <h6> ${currencyFormat(data.AmtTendered)} </h6>
+            </div>
+            <div class="bottom-tab">
+              <h4> CHANGE </h4>
+              <h6> ${currencyFormat(data.AmtChange)} </h6>
+            </div>
+          </div>`: ''
+  }
+
+  ${CardDetails(data.CardDetails)}
 
  <div class="thank">
    <h4>Thank You</h4>
@@ -138,6 +160,8 @@ const PrintInvoiceRecipt = (data, name) => {
       }
     });
 
+    console.log('PrintInvoiceRecipt-data', data)
+
     PrintWindow.setMenu(null);
     PrintWindow.loadURL(`file://${path.resolve(__dirname, 'Invoice.html')}`);
     PrintWindow.webContents.on('did-finish-load', async () => {
@@ -158,7 +182,7 @@ const PrintInvoiceRecipt = (data, name) => {
 
 const PreviewPrintInvoiceRecipt = (data, name) => {
 
-  const PrintWindow = new BrowserWindow({
+  PreviewPrintWindow = new BrowserWindow({
     width: 800,
     height: 600,
     center: true,
@@ -174,29 +198,18 @@ const PreviewPrintInvoiceRecipt = (data, name) => {
     }
   });
 
-  PrintWindow.setMenu(null);
+  PreviewPrintWindow.setMenu(null);
 
-  PrintWindow.loadURL(`file://${path.resolve(__dirname, 'Invoice.html')}`);
+  PreviewPrintWindow.loadURL(`file://${path.resolve(__dirname, 'Invoice.html')}`);
 
-  PrintWindow.webContents.on('did-finish-load', async () => {
-    const template = [
-      {
-        label: 'print',
-        click: () => {
-          PrintWindow.webContents.print({
-            silent: true,
-            margins: '0',
-            printBackground: true, deviceName: name
-          }, () => {
-            PrintWindow.close();
-          });
-        }
-      }
-    ]
-    const menu = Menu.buildFromTemplate(template)
-    PrintWindow.setMenu(menu);
-    PrintWindow.webContents.send('LoadInvoice',
-      { html: MapData(data), info: data });
+  PreviewPrintWindow.webContents.on('did-finish-load', async () => {
+    PreviewPrintWindow.webContents.send('LoadInvoice',
+      { 
+        html: MapData(data),
+        info: data,
+        WindowId : PreviewPrintWindow.id,
+        printerDeviceName:name
+      });
   });
 }
 

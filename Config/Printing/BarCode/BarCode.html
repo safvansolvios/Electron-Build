@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const { ipcRenderer } = require("electron")
+        var QRCode = require('qrcode')
+
+        ipcRenderer.on("Load", function (event, data) {
+            document.getElementById('label').innerHTML = data.html;
+            var canvas = document.getElementById('canvas')
+            // JsBarcode('#barcode', data.info.barcode, {
+            //     lineColor: "#000",
+            //     textMargin: 0,
+            //     format: "CODE128",
+            //     fontSize: 16,
+            //     width: 1.5,
+            //     displayValue: false,
+            //     height: 18
+            // });
+
+            QRCode.toCanvas(canvas, data.info.barcode, function (error) {
+                if (error) console.error(error)
+                console.log('success!');
+            })
+            //}
+        });
+    </script>
+    <style>
+        @page {
+            page-break-before: always;
+            margin-top: 3px !important;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Arial Black';
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .product-details {
+            padding-top: 9px !important;
+        }
+
+        .product-details p {
+            font-size: 9pt !important;
+            margin-bottom: 0.5px;
+            display: -webkit-box;
+            overflow: hidden;
+            line-height: 1.1;
+            font-family: Impact;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 3;
+            letter-spacing: 0.6px;
+        }
+
+        .store-name p {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            font-family: Impact;
+            padding-bottom: 4px;
+        }
+
+        .store-name {
+           
+            text-align: center;
+            margin: 4px;
+            border-bottom: 1px solid #000;
+            /* font-weight: bold; */
+            /* padding: 8px 5px 5px 5px; */
+        }
+
+        #price {
+            font-size: 20pt !important;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-top: -4px;
+        }
+
+
+        #barcode {
+            width: 100% !important;
+        }
+
+        #InvoiceData {
+            height: 120px;
+            position: relative;
+        }
+
+        .d-flex {
+            display: flex;
+            padding-left: 0 !important;
+            margin-left: -4px;
+        }
+
+        .-m-t-12 {
+            margin-top: -12px !important;
+        }
+
+        #canvas {
+            height: 70px !important;
+            width: 70px !important;
+        }
+
+        .p-5 {
+            padding: 0 5px;
+        }
+
+        .barcode-div {
+            z-index: -1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="InvoiceData">
+        <div class="label" id="label">
+        </div>
+    </div>
+</body>
+
+</html>

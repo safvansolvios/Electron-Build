@@ -139,7 +139,6 @@ const PrintRecipt = (data,name) =>{
 
 
 const PreviewPrintRecipt = (data,name) =>{
-   // options.printerName = name;
     PosPrinter.print(MapData(data), {
         ...options,
         printerName:name,
@@ -154,7 +153,7 @@ const PreviewPrintRecipt = (data,name) =>{
                 count[index].setMaximizable(false);
                 const template = [
                     {
-                      label: 'print',
+                      label: 'Print',
                       click: () => { 
                         count[index].webContents.print({silent: true, printBackground: true, deviceName : name},() => {
                             count[index].close();
