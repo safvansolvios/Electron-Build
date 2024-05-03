@@ -6,7 +6,6 @@ const VirtualKeyboard = require('electron-virtual-keyboard');
 const Updater = require('./Config/Update');
 const Store = require('./Config/Store');
 const IpcCommunication = require('./Communication');
-//const log = require('electron-log');
 
 let Clientwin;
 let win;
@@ -88,13 +87,19 @@ if (!gotTheLock) {
       win.loadURL(`${uri}?terminalsetup=true`);
     }
 
-    //win.maximize();
     vkb = new VirtualKeyboard(win.webContents);
 
     globalShortcut.register('CommandOrControl+R', () => {
-      //win.reload();
       console.log('Do Nothing');
     });
+
+    // globalShortcut.register('CommandOrControl+J', () => {
+    //   //console.log('Do Nothing j');
+    // });
+
+    globalShortcut.register('CommandOrControl+M', () => {
+      console.log('Alt + Tab pressed using node-global-shortcut');
+   });
 
     win.on('blur', () => {
       const isMinimized = win.isMinimized();
@@ -140,8 +145,7 @@ if (!gotTheLock) {
 
 
     if (externalDisplay) {
-      const { width, height } = externalDisplay.workAreaSize
-      //CreateClientWindow(externalDisplay);
+      CreateClientWindow(externalDisplay);
     }
     //CreateClientWindow(null);
 
