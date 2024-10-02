@@ -13,7 +13,6 @@ autoUpdater.requestHeaders = {'Cache-Control' : 'no-store, no-cache, must-revali
 module.exports = (win) =>{
     
     autoUpdater.checkForUpdates();
-    
 
     autoUpdater.on('update-available',(info)=>
     {
@@ -23,6 +22,7 @@ module.exports = (win) =>{
             message: `Version: ${info.version} is now available.`,
             detail: `${info.releaseNotes}`,
             buttons: ['Update', 'Later'],
+            defaultId:1,
            }).then(res=>{
             let btnindex = res.response;
 
@@ -48,6 +48,10 @@ module.exports = (win) =>{
             }
         })
 
+    });
+
+    autoUpdater.on('update-not-available', () => {
+        win.webContents.send('update-not-available');
     });
 
     autoUpdater.on('update-downloaded',(info)=>
@@ -81,12 +85,6 @@ module.exports = (win) =>{
         // }
         log_message = log_message + ' (' + (progressObj.transferred / 1048576).toFixed(2) + "/" + (progressObj.total / 1048576).toFixed(2) + ') MB';
         win.webContents.send('UpdateProgress', log_message);
-
     });
-
-    
-
-    
-
 }
 
