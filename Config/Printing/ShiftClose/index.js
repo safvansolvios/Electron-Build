@@ -24,17 +24,22 @@ const PrintShiftReport = (data, name) => {
  
   PrintWindow.loadURL(`file://${path.resolve(__dirname, 'index.html')}`);
   PrintWindow.webContents.on('did-finish-load', async () => {
+
      PrintWindow.webContents.send('LoadReport',{info:data});
-     PrintWindow.webContents.print({
-      silent: true,
-      printBackground: true,
-      deviceName: name
-    }, (res,err) => {
-      setTimeout (()=>{
-        PrintWindow.close();
-        resolve(true);
-      },2000)
-    });
+
+     setTimeout (()=>{
+      PrintWindow.webContents.print({
+        silent: true,
+        printBackground: true,
+        deviceName: name
+      }, (res,err) => {
+        setTimeout (()=>{
+          PrintWindow.close();
+          resolve(true);
+        },2000)
+      });
+     },500);
+     
   });
 });
 }

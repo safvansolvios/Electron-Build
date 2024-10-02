@@ -10,7 +10,6 @@ const options = {
     pageSize: '80mm',
     footer:'Test Bar Code',
     silent:true,
-    
  }
 
  const HR = {

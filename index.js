@@ -1,21 +1,27 @@
 const { app, BrowserWindow, screen, dialog, session, net,Menu,globalShortcut  } = require('electron')
-const { getIP, Ping, GetMAC,generateRandomId } = require('./utility/Helpers');
+const { getIP, GetMAC,generateRandomId,ProcessHealthCheckResult } = require('./utility/Helpers');
 const { CheckTerminal } = require('./service');
 const path = require('path')
 const VirtualKeyboard = require('electron-virtual-keyboard');
-const Updater = require('./Config/Update');
 const Store = require('./Config/Store');
 const IpcCommunication = require('./Communication');
+const log = require('electron-log');
 
 let Clientwin;
 let win;
 
-// log.info(`getAppPath ${path.join(app.getAppPath(), '..','extraResources/CashDrawer.exe "MyPrinter"')}`)
-// log.info(`exe ${app.getPath("exe")}`)
-// log.info(`temp ${app.getPath("temp")}`)
+const args = process.argv;
+let uri = `file://${path.resolve(__dirname, 'index.html')}`;
 
-const uri = `file://${path.resolve(__dirname, 'index.html')}`;
-//const uri = 'http://localhost:3000';
+if(args && args.length > 1) {
+  if(args[1] === 'local') {
+    uri = 'http://localhost:3000';
+  }
+}
+
+//uri = 'http://localhost:3000';
+
+log.info("Command line arguments: ", args);
 
 const terminalConfig = Store.get('terminalConfig');
 app.commandLine.appendSwitch('disable-http2');
@@ -46,13 +52,12 @@ if (!gotTheLock) {
       storages: ['localstorage']
     });
 
-
     win.setFullScreen(true);
 
-    
-
     if (terminalConfig) {
-      if (terminalConfig.connection != undefined && terminalConfig.terminalName != undefined && terminalConfig.storeId != undefined) {
+      if (terminalConfig.connection != undefined && 
+          terminalConfig.terminalName != undefined && 
+          terminalConfig.storeId != undefined) {
 
         let res = await getIP(terminalConfig.connection);
 
@@ -63,6 +68,12 @@ if (!gotTheLock) {
         }
 
         try {
+          const HealthCheckResult = await ProcessHealthCheckResult(res.address);
+          if(!HealthCheckResult.alive){
+            win.loadURL(`${uri}?terminalsetup=true`);
+            return;
+          }
+
           const req = await CheckTerminal(res.address, DeviceInfo);
           if (req.data.success) {
             if (req.data.result.length > 0) {
@@ -111,8 +122,6 @@ if (!gotTheLock) {
 
   function CreateClientWindow(externalDisplay) {
     Clientwin = new BrowserWindow({
-      // width: width,
-      // height: height,
       fullscreen: true,
       show: true,
       frame: false,
@@ -156,10 +165,7 @@ if (!gotTheLock) {
       app.quit();
     });
 
-    IpcCommunication(win, Clientwin);
-    if (!process.env.ELECTRON_DEV) {
-      setTimeout(Updater(win), 3000);
-    }
+    IpcCommunication(win, Clientwin,uri);
 
   })
 

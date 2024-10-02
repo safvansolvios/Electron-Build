@@ -3,8 +3,8 @@ const { app, BrowserWindow, screen, session } = require('electron')
 const { TestFuncation, buildMenu, buildDefaultTemplate, buildDarwinTemplate } = require('../Menu')
 const { ReadConnectionFile, SetPinPad } = require('../Config/Connection');
 const print = require('../Config');
-const { getIP, Ping, GetMAC } = require('../utility/Helpers');
-const { CheckHealth, OpenDrawerLog } = require('../service');
+const { getIP, Ping, GetMAC, ProcessHealthCheckResult } = require('../utility/Helpers');
+const { OpenDrawerLog } = require('../service');
 const { download } = require('electron-dl');
 const path = require('path')
 const Store = require('../Config/Store');
@@ -12,11 +12,12 @@ const axios = require('axios');
 const fs = require('fs')
 const { exec, spawn } = require('child_process');
 const log = require('electron-log');
+const Updater = require('../Config/Update');
 
 log.transports.file.format = '{h}:{i}:{s} {text}';
 log.transports.file.maxSize = 5 * 1024 * 1024; // 5 MB
 
-module.exports = (MainWin, ClientWin) => {
+module.exports = (MainWin, ClientWin, uri) => {
 
   const GetPrinter = async (printerName = 'Default') => {
 
@@ -39,20 +40,31 @@ module.exports = (MainWin, ClientWin) => {
 
     const terminalConfig = Store.get('terminalConfig');
 
-    MainWin.webContents
-      .executeJavaScript('localStorage.getItem("Token");', true)
-      .then(result => {
-        OpenDrawerLog(terminalConfig.connection, result, reason).then(res => {
-        }).catch(err => { });
-      });
+    if (reason === 'Manual') {
+      MainWin.webContents
+        .executeJavaScript('localStorage.getItem("Token");', true)
+        .then(result => {
+          OpenDrawerLog(terminalConfig.connection, result, reason).then(res => {
+          }).catch(err => { });
+        });
+    }
 
-    //const customExePath = path.join(app.getAppPath(), `CashDrawer.exe "${printerName}"`);
-    //const customExePath = `${path.resolve(__dirname, `CashDrawer.exe "${printerName}"`)}`;
+
+    let customExePath = "";
+    if (!app.isPackaged) {
+      customExePath = path.join(app.getAppPath(), `extraResources/CashDrawer.exe "${printerName}"`);
+    } else {
+      customExePath = `"${path.join(app.getAppPath(), '..', 'extraResources/CashDrawer.exe')}" "${printerName}"`;
+    }
+
+    //const customExePath = `${path.resolve(__dirname, `extraResources/CashDrawer.exe "${printerName}"`)}`;
     log.info(`app path. ${app.getAppPath()}`);
-    const customExePath = path.join(app.getAppPath(), '..', 'extraResources/CashDrawer.exe "MyPrinter"');
+    //const customExePath = path.join(app.getAppPath(), '..', 'extraResources/CashDrawer.exe "MyPrinter"');
     log.info(customExePath)
+    log.info('isPackaged', app.isPackaged)
 
-    exec(`"${path.join(app.getAppPath(), '..', 'extraResources/CashDrawer.exe')}" "${printerName}"`, (error, stdout, stderr) => {
+
+    exec(customExePath, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error: ${error}`);
         log.info(`OpenDrawer error. ${error}`);
@@ -89,12 +101,16 @@ module.exports = (MainWin, ClientWin) => {
     const terminalConfig = Store.get('terminalConfig');
 
     if (terminalConfig) {
-      const _getIP = await getIP(terminalConfig.connection);
-      return {
-        ...terminalConfig,
-        IpAddress: { ..._getIP, address: `${_getIP.address}:8081` },
-        MAC: await GetMAC()
-      };
+      try{
+        const _getIP = await getIP(terminalConfig.connection);
+        return {
+          ...terminalConfig,
+          IpAddress: { ..._getIP, address: `${_getIP.address}:8081` },
+          MAC: await GetMAC()
+        };
+      }catch(e){
+        return terminalConfig;
+      }
     } else {
       return {
         connection: '',
@@ -117,18 +133,22 @@ module.exports = (MainWin, ClientWin) => {
     let res = await Ping(arg.host);
     if (res.alive) {
       try {
-        const Req = await CheckHealth(res.numeric_host);
-        if (Req.data.status === 'Healthy') {
-          res.numeric_host = `${res.numeric_host}:8081`
-          return res;
-        } else {
-          res.alive = false;
-          return res;
-        }
+        const HealthCheckResult = await ProcessHealthCheckResult(res.numeric_host);
+        console.log(HealthCheckResult);
+        res.alive = HealthCheckResult.alive;
+        res.reason = HealthCheckResult.reason;
+        res.numeric_host = HealthCheckResult.numeric_host;
+        return res;
       } catch (e) {
+        res.reason = "Server not found.";
         res.alive = false;
         return res;
       }
+    }
+    else
+    {
+      res.alive = false;
+      res.reason = "Server not found.";
     }
     return res;
   })
@@ -138,8 +158,7 @@ module.exports = (MainWin, ClientWin) => {
       SetPinPad(arg);
       return true;
     }
-    catch
-    {
+    catch {
       return false;
     }
   })
@@ -177,8 +196,6 @@ module.exports = (MainWin, ClientWin) => {
 
   });
 
-
-
   ipcMain.handle('GetAllPrinter', async (event, arg) => {
     if (MainWin != undefined) {
       try {
@@ -190,7 +207,6 @@ module.exports = (MainWin, ClientWin) => {
       }
     }
   })
-
 
   ipcMain.on('UpdateClientScreenTransactionDone', (event, arg) => {
     if (ClientWin != undefined)
@@ -234,19 +250,18 @@ module.exports = (MainWin, ClientWin) => {
   });
 
   ipcMain.on('preview-print-recipt', async (e, data) => {
-    console.log('printer', await GetPrinter(data.printer));
     print.PreviewPrintInvoiceRecipt(data, await GetPrinter(data.printer));
-
   });
 
   ipcMain.on('print-Shift-recipt', async (e, data) => {
+    console.log('data.printer', data.data);
     print.PrintShiftReport(data.data, await GetPrinter(data.printer));
   });
 
   ipcMain.on('print-recipt', async (e, data) => {
 
     await print.PrintInvoiceRecipt(data, await GetPrinter(data.Printername));
-    await OpenDrawer(data.Printername, 'Invoice')
+    //await OpenDrawer(data.Printername, 'Invoice')
     for (let index = 0; index < data.PrintObject.Extracopy; index++) {
       await print.PrintInvoiceRecipt(data, await GetPrinter(data.Printername));
     }
@@ -332,7 +347,6 @@ module.exports = (MainWin, ClientWin) => {
     }, 2000);
   });
 
-
   ipcMain.on('close-app', (e, data) => {
     app.quit();
   });
@@ -356,6 +370,38 @@ module.exports = (MainWin, ClientWin) => {
       });
     }
 
+  });
+
+  ipcMain.on('open-CREdashboard', (e, data) => {
+
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height } = primaryDisplay.workAreaSize;
+
+    const CREdashboardWindow = new BrowserWindow({
+      width: width,
+      height: height,
+      title: 'CRE Dashboard',
+      frame: true,
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        contextIsolation: false,
+        preload: path.join(__dirname, '../preload.js')
+      },
+    });
+
+    setTimeout(() => {
+      //CREdashboardWindow.webContents.openDevTools();
+      CREdashboardWindow.setMenu(null);
+      CREdashboardWindow.maximize();
+      CREdashboardWindow.loadURL(`${uri}?CreDashboard=true`);
+    }, 3000);
+
+  });
+
+  ipcMain.on('check-update', (e, data) => {
+    Updater(MainWin)
   });
 }
 

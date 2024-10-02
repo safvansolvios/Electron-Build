@@ -65,27 +65,6 @@ const PrintBarCode = async (data, name) => {
 
   PrintWindow.webContents.on('did-finish-load', async () => {
     PrintWindow.webContents.send('Load', { html: MapData(data), info: data });
-    // for (let i = 0; i < data.qty; i++) {
-    //   Print(PrintWindow,data.printer);
-    // }
-
-    // const template = [
-    //   {
-    //     label: 'print',
-    //     click: () => {
-    //       PrintWindow.webContents.print({
-    //         silent: true,
-    //         margins: '0',
-    //         printBackground: true, deviceName: name
-    //       }, () => {
-    //         //PrintWindow.close();
-    //       });
-    //     }
-    //   }
-    // ]
-    // const menu = Menu.buildFromTemplate(template)
-    // PrintWindow.setMenu(menu);
-
     PrintWindow.webContents.print({
       silent: true,
       printBackground: true,
