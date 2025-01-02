@@ -11,7 +11,7 @@ const CheckHealth = async (host,data) =>{
 const OpenDrawerLog = async (host,token,reason) => {
     return await axios.post(`http://${host}:8081/api/cashdrawerlogs`,{reason},{
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token} +xxxx`,
         }
       });
 };
